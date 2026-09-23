@@ -38,7 +38,7 @@ BINDINGS as necessary. Return the resulting bindings on success, or
              +match-fail+))
         ((variable-p pattern)
          (extend-bindings pattern fact bindings))
-        ((eql pattern fact) bindings)
+        ((eql (constant-value pattern) (constant-value fact)) bindings)
         (t +match-fail+)))
 
 (defun match-atom (pattern fact bindings)
