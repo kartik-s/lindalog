@@ -5,7 +5,7 @@
 (defconstant +match-fail+ :match-fail
   "Indicates match failure")
 
-(defconstant +no-bindings+ :no-bindings
+(defconstant +no-bindings+ '((t . t))
   "Indicates match success with no variables")
 
 (defun get-binding (var bindings)
@@ -23,7 +23,7 @@
 (defun extend-bindings (var val bindings)
   "Add a (var . val) pair to a binding list."
   (cons (cons var val)
-        (if (eq +no-bindings+ bindings)
+        (if (eql +no-bindings+ bindings)
             nil
             bindings)))
 
