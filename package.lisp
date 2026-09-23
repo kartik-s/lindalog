@@ -1,4 +1,5 @@
 ;;;; package.lisp
 
 (defpackage #:lindalog
-  (:use #:cl))
+  (:use #:cl)
+  (:shadow #:variable #:atom))
