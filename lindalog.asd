@@ -1,11 +1,27 @@
 ;;;; lindalog.asd
 
 (asdf:defsystem #:lindalog
-  :description "Describe lindalog here"
+  :description "A multiset rewriting language"
   :author "Kartik Singh <kartiksingh_ma@yahoo.com>"
   :version "0.0.1"
   :serial t
-  :components ((:file "package")
-               (:file "ast")
-               (:file "match")
-               (:file "lindalog")))
+  :components
+  ((:module "src"
+    :components
+    ((:file "package")
+     (:file "ast")
+     (:file "match")
+     (:file "lindalog")))))
+
+(asdf:defsystem #:lindalog/tests
+  :description "Tests for Lindalog"
+  :author "Kartik Singh <kartiksingh_ma@yahoo.com>"
+  :depends-on ("fiveam"
+               "lindalog"
+               )
+  :serial t
+  :components
+  ((:module "test"
+    :components
+    ((:file "package")
+     (:file "tests")))))
