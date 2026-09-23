@@ -1,0 +1,10 @@
+# Common Lisp
+*.fasl
+
+# Emacs
+*~
+\#*\#
+.\#*
+
+# OS
+.DS_Store
