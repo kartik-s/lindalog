@@ -7,4 +7,5 @@
   :serial t
   :components ((:file "package")
                (:file "ast")
+               (:file "match")
                (:file "lindalog")))
