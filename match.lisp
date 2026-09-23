@@ -3,15 +3,50 @@
 (in-package #:lindalog)
 
 (defconstant +match-fail+ :match-fail
-  "Constant indicating a match failed")
+  "Indicates match failure")
+
+(defconstant +no-bindings+ :no-bindings
+  "Indicates match success with no variables")
+
+(defun get-binding (var bindings)
+  "Find a (var . val) pair in a binding list."
+  (assoc var bindings))
+
+(defun binding-val (binding)
+  "Get the value part of a single binding"
+  (cdr binding))
+
+(defun lookup (var bindings)
+  "Get the value associated with VAR in BINDINGS."
+  (binding-val (get-binding var bindings)))
+
+(defun extend-bindings (var val bindings)
+  "Add a (var . val) pair to a binding list."
+  (cons (cons var val)
+        (if (eq +no-bindings+ bindings)
+            nil
+            bindings)))
+
+(defun match-term (pattern fact bindings)
+  "Match the term PATTERN against the ground term FACT, extending
+BINDINGS as necessary. Return the resulting bindings on success, or
++MATCH-FAIL+ on failure."
+  (cond ((and (variable-p pattern)
+              (get-binding pattern bindings))
+         (if (eql fact (lookup pattern bindings))
+             bindings
+             +match-fail+))
+        ((variable-p pattern)
+         (extend-bindings pattern fact bindings))
+        ((eql pattern fact) bindings)
+        (t +match-fail+)))
 
 (defun match-atom (pattern fact bindings)
   "Match the atom PATTERN against the ground atom FACT, extending
 BINDINGS as necessary. Return the resulting bindings on success,
 or +MATCH-FAIL+ on failure."
   (declare (type atom pattern)
-           (type atom fact)
-           (type list bindings))
+           (type atom fact))
   (labels ((match-args (pattern-args fact-args bindings)
              (cond ((and (null pattern-args)
                          (null fact-args))
