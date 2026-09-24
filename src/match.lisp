@@ -10,7 +10,7 @@
 
 (defun get-binding (var bindings)
   "Find a (var . val) pair in a binding list."
-  (assoc var bindings))
+  (assoc var bindings :test #'ast-equal-p))
 
 (defun binding-var (binding)
   "Get the variable part of a single binding"
