@@ -12,6 +12,10 @@
   "Find a (var . val) pair in a binding list."
   (assoc var bindings))
 
+(defun binding-var (binding)
+  "Get the variable part of a single binding"
+  (car binding))
+
 (defun binding-val (binding)
   "Get the value part of a single binding"
   (cdr binding))
@@ -26,6 +30,14 @@
         (if (eql +no-bindings+ bindings)
             nil
             bindings)))
+
+(defun bindings-equal-p (a b)
+  "Check if the two bindings are the same."
+  (and (= (length a) (length b))
+       (every (lambda (binding)
+                (ast-equal-p (binding-val binding)
+                             (lookup (binding-var binding) b)))
+              a)))
 
 (defun match-term (pattern fact bindings)
   "Match the term PATTERN against the ground term FACT, extending
