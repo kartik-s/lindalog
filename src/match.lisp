@@ -33,12 +33,12 @@ BINDINGS as necessary. Return the resulting bindings on success, or
 +MATCH-FAIL+ on failure."
   (cond ((and (variable-p pattern)
               (get-binding pattern bindings))
-         (if (eql fact (lookup pattern bindings))
+         (if (ast-equal-p fact (lookup pattern bindings))
              bindings
              +match-fail+))
         ((variable-p pattern)
          (extend-bindings pattern fact bindings))
-        ((eql (constant-value pattern) (constant-value fact)) bindings)
+        ((ast-equal-p pattern fact) bindings)
         (t +match-fail+)))
 
 (defun match-atom (pattern fact bindings)

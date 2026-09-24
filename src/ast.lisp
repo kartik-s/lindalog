@@ -25,3 +25,30 @@
            :read-only t)
   (rhs nil :type list
            :read-only t))
+
+(defun ast-equal-p (a b)
+  (typecase a
+    (constant
+     (and (constant-p b)
+          (eql (constant-value a)
+               (constant-value b))))
+    (variable
+     (and (variable-p b)
+          (eq (variable-name a)
+              (variable-name b))))
+    (atom
+     (and (atom-p b)
+          (eq (atom-predicate a)
+              (atom-predicate b))
+          (every #'ast-equal-p
+                 (atom-args a)
+                 (atom-args b))))
+    (rule
+     (and (rule-p b)
+          (every #'ast-equal-p
+                 (rule-lhs a)
+                 (rule-lhs b))
+          (every #'ast-equal-p
+                 (rule-rhs a)
+                 (rule-rhs b))))
+    (otherwise nil)))

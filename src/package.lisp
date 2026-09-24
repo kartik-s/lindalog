@@ -22,4 +22,6 @@
    #:rule-p
    #:rule-lhs
    #:rule-rhs
+
+   #:ast-equal-p
    ))
