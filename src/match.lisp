@@ -81,3 +81,32 @@ or +MATCH-FAIL+ on failure."
                     (atom-args fact)
                     bindings)
         +match-fail+)))
+
+(defun match-premises (premises database bindings matched-facts)
+  "Find a match in DATABASE for the conjunction of PREMISES."
+  (cond ((eq bindings +match-fail+) (values +match-fail+ nil))
+        ((null premises) (values bindings matched-facts))
+        (t
+         (let* ((premise (first premises))
+                (other-premises (rest premises))
+                (pred (atom-predicate (premise-atom premise)))
+                (sc (gethash pred (database-predicate-scs database)))
+                (table (ecase sc
+                         (:rd (database-rd-store database))
+                         (:in (database-in-store database))
+                         (:sub (database-sub-store database)))))
+           (loop :for fact :in (gethash pred table)
+                 :unless (and (eq :in sc)
+                              (not (premise-rd-p premise))
+                              (member (fact-id fact)
+                                      (mapcar #'fact-id matched-facts)))
+                   :do (let ((first-bindings (match-atom (premise-atom premise)
+                                                         (fact-atom fact)
+                                                         bindings)))
+                         (multiple-value-bind (new-bindings new-matched-facts)
+                             (match-premises other-premises
+                                             database
+                                             first-bindings
+                                             (cons fact matched-facts))
+                           (unless (eq +match-fail+ new-bindings)
+                             (return (values new-bindings new-matched-facts))))))))))
