@@ -213,3 +213,15 @@
                                         (lindalog:make-constant 'c)))))
     (is (eq lindalog::+match-fail+
             (lindalog::match-atom a b lindalog::+no-bindings+)))))
+
+(test premise-with-atom-and-rd-p
+  (let* ((a (lindalog:make-atom
+            'at
+            (list (lindalog:make-constant 'player)
+                  (lindalog:make-constant 'gate))))
+         (p (lindalog:make-premise a t)))
+    (is (lindalog:atom-p (lindalog:premise-atom p)))
+    (is (eq 'at (lindalog:atom-predicate (lindalog:premise-atom p))))
+    (is (eq 'player (lindalog:constant-value (first (lindalog:atom-args (lindalog:premise-atom p))))))
+    (is (eq 'gate (lindalog:constant-value (second (lindalog:atom-args (lindalog:premise-atom p))))))
+    (is (lindalog:premise-rd-p p))))

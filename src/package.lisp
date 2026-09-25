@@ -18,6 +18,11 @@
    #:atom-predicate
    #:atom-args
 
+   #:make-premise
+   #:premise-p
+   #:premise-atom
+   #:premise-rd-p
+
    #:make-rule
    #:rule-p
    #:rule-lhs
