@@ -333,3 +333,170 @@
              premises
              database
              match)))))
+
+(test match-premises-consuming-in-premise-records-consumed-fact
+  (let* ((a (lindalog:make-atom 'p (list (lindalog:make-constant 'a))))
+         (database (make-test-database
+                   '((p . :in))
+                   (list a)))
+         (premise (lindalog:make-premise
+                   (lindalog:make-atom 'p (list (lindalog:make-variable 'x)))
+                   nil)))
+    (is (member a
+                (lindalog::match-consumed-facts
+                 (lindalog::match-premises
+                  (list premise)
+                  database
+                  (lindalog::make-match)))
+                :key #'lindalog::fact-atom
+                :test #'lindalog:ast-equal-p))))
+
+(test match-premises-read-only-in-premise-records-read-fact
+  (let* ((a (lindalog:make-atom 'p (list (lindalog:make-constant 'a))))
+         (database (make-test-database
+                   '((p . :in))
+                   (list a)))
+         (premise (lindalog:make-premise
+                   (lindalog:make-atom 'p (list (lindalog:make-variable 'x)))
+                   t)))
+    (is (member a
+                (lindalog::match-read-facts
+                 (lindalog::match-premises
+                  (list premise)
+                  database
+                  (lindalog::make-match)))
+                :key #'lindalog::fact-atom
+                :test #'lindalog:ast-equal-p))))
+
+(test match-premises-rd-premise-records-read-fact
+  (let* ((a (lindalog:make-atom 'p (list (lindalog:make-constant 'a))))
+         (database (make-test-database
+                   '((p . :rd))
+                   (list a)))
+         (premise (lindalog:make-premise
+                   (lindalog:make-atom 'p (list (lindalog:make-variable 'x)))
+                   t)))
+    (is (member a
+                (lindalog::match-read-facts
+                 (lindalog::match-premises
+                  (list premise)
+                  database
+                  (lindalog::make-match)))
+                :key #'lindalog::fact-atom
+                :test #'lindalog:ast-equal-p))))
+
+(test match-premises-sub-premise-records-read-fact
+  (let* ((a (lindalog:make-atom 'p (list (lindalog:make-constant 'a))))
+         (database (make-test-database
+                   '((p . :sub))
+                   (list a)))
+         (premise (lindalog:make-premise
+                   (lindalog:make-atom 'p (list (lindalog:make-variable 'x)))
+                   t)))
+    (is (member a
+                (lindalog::match-read-facts
+                 (lindalog::match-premises
+                  (list premise)
+                  database
+                  (lindalog::make-match)))
+                :key #'lindalog::fact-atom
+                :test #'lindalog:ast-equal-p))))
+
+(test match-premises-two-consuming-premises-cannot-reuse-fact
+  (let ((database (make-test-database
+                   '((p . :in))
+                   (list (lindalog:make-atom 'p (list (lindalog:make-constant 'a))))))
+        (premises (list (lindalog:make-premise
+                         (lindalog:make-atom 'p (list (lindalog:make-variable 'x)))
+                         nil)
+                        (lindalog:make-premise
+                         (lindalog:make-atom 'p (list (lindalog:make-variable 'x)))
+                         nil))))
+    (is (eq lindalog::+match-fail+
+            (lindalog::match-premises
+             premises
+             database
+             (lindalog::make-match))))))
+
+(test match-premises-two-consuming-premises-can-use-distinct-equal-facts
+  (let* ((a (lindalog:make-atom 'p (list (lindalog:make-constant 'a))))
+         (database (make-test-database
+                    '((p . :in))
+                    (list a a)))
+         (premises (list (lindalog:make-premise
+                          (lindalog:make-atom 'p (list (lindalog:make-variable 'x)))
+                          nil)
+                         (lindalog:make-premise
+                          (lindalog:make-atom 'p (list (lindalog:make-variable 'x)))
+                          nil))))
+    (is (= 2 (count a
+                    (lindalog::match-consumed-facts
+                     (lindalog::match-premises
+                      premises
+                      database
+                      (lindalog::make-match)))
+                    :key #'lindalog::fact-atom
+                    :test #'lindalog:ast-equal-p)))))
+
+(test match-premises-rejected-match-fails
+  (let ((database (make-test-database
+                   '((p . :rd))
+                   (list (lindalog:make-atom 'p (list (lindalog:make-constant 'a))))))
+        (premise (lindalog:make-premise
+                  (lindalog:make-atom 'p (list (lindalog:make-variable 'x)))
+                  t)))
+    (is (eq lindalog::+match-fail+
+            (lindalog::match-premises
+             (list premise)
+             database
+             (lindalog::make-match)
+             (constantly nil))))))
+
+(test match-premises-backtracks-after-rejected-match
+  (let* ((b (lindalog:make-atom 'p (list (lindalog:make-constant 'b))))
+         (database (make-test-database
+                    '((p . :in))
+                    (list
+                     (lindalog:make-atom 'p (list (lindalog:make-constant 'a)))
+                     b
+                     (lindalog:make-atom 'p (list (lindalog:make-constant 'c))))))
+         (premise (lindalog:make-premise
+                   (lindalog:make-atom 'p (list (lindalog:make-variable 'x)))
+                   nil)))
+    (is (member b
+                (lindalog::match-consumed-facts
+                 (lindalog::match-premises
+                  (list premise)
+                  database
+                  (lindalog::make-match)
+                  (lambda (match)
+                    (some (lambda (fact)
+                            (eq (lindalog:constant-value
+                                 (first (lindalog:atom-args
+                                         (lindalog::fact-atom fact))))
+                                'b))
+                          (lindalog::match-consumed-facts match)))))
+                :key #'lindalog::fact-atom
+                :test #'lindalog:ast-equal-p))))
+
+(test match-premises-read-and-consuming-premises-can-share-in-fact
+    (let* ((a (lindalog:make-atom 'p (list (lindalog:make-constant 'a))))
+           (database (make-test-database
+                      '((p . :in))
+                      (list a)))
+           (premises (list (lindalog:make-premise
+                            (lindalog:make-atom 'p (list (lindalog:make-variable 'x)))
+                            nil)
+                           (lindalog:make-premise
+                            (lindalog:make-atom 'p (list (lindalog:make-variable 'x)))
+                            t)))
+           (match (lindalog::match-premises
+                        premises
+                        database
+                        (lindalog::make-match))))
+      (is (and (member a (lindalog::match-consumed-facts match)
+                       :key #'lindalog::fact-atom
+                       :test #'lindalog:ast-equal-p)
+               (member a (lindalog::match-read-facts match)
+                       :key #'lindalog::fact-atom
+                       :test #'lindalog:ast-equal-p)))))
