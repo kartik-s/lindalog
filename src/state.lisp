@@ -30,14 +30,18 @@
   (next-id 0
    :type integer))
 
-(defun add-fact (fact database sc)
-  "Add FACT to the SC table of DATABASE."
-  (pushnew (ecase sc
-             (:rd (database-rd-store database))
-             (:in (database-in-store database))
-             (:sub (database-sub-store database)))
-           fact
-           :test #'fact-equal-p))
+(defun add-fact (atom sc database)
+  "Add ATOM to the SC table of DATABASE as a FACT."
+  (let ((pred (atom-predicate atom))
+        (store (ecase sc
+                 (:rd (database-rd-store database))
+                 (:in (database-in-store database))
+                 (:sub (database-sub-store database)))))
+    (unless (gethash pred store)
+      (setf (gethash pred store) nil))
+    (push (make-fact (incf (database-next-id database))
+                     atom)
+          (gethash pred store))))
 
 (defstruct interpreter-state
   (rules nil
