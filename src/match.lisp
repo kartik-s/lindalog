@@ -82,31 +82,66 @@ or +MATCH-FAIL+ on failure."
                     bindings)
         +match-fail+)))
 
-(defun match-premises (premises database bindings matched-facts)
+(defstruct match
+  (bindings +no-bindings+
+   :type list
+   :read-only t)
+  (read-facts nil
+   :type list
+   :read-only t)
+  (consumed-facts nil
+   :type list
+   :read-only t))
+
+(defun extend-match-fact (match fact consume-p)
+  (let ((read-facts (match-read-facts match))
+        (consumed-facts (match-consumed-facts match)))
+    (make-match
+     :bindings (match-bindings match)
+     :read-facts (if consume-p
+                     read-facts
+                     (cons fact read-facts))
+     :consumed-facts (if consume-p
+                         (cons fact consumed-facts)
+                         consumed-facts))))
+
+(defun extend-match-bindings (match bindings)
+  (make-match
+   :bindings bindings
+   :read-facts (match-read-facts match)
+   :consumed-facts (match-consumed-facts match)))
+
+(defun match-premises (premises database match)
   "Find a match in DATABASE for the conjunction of PREMISES."
-  (cond ((eq bindings +match-fail+) (values +match-fail+ nil))
-        ((null premises) (values bindings matched-facts))
-        (t
-         (let* ((premise (first premises))
-                (other-premises (rest premises))
-                (pred (atom-predicate (premise-atom premise)))
-                (sc (gethash pred (database-predicate-scs database)))
-                (table (ecase sc
-                         (:rd (database-rd-store database))
-                         (:in (database-in-store database))
-                         (:sub (database-sub-store database)))))
-           (loop :for fact :in (gethash pred table)
-                 :unless (and (eq :in sc)
-                              (not (premise-rd-p premise))
-                              (member (fact-id fact)
-                                      (mapcar #'fact-id matched-facts)))
-                   :do (let ((first-bindings (match-atom (premise-atom premise)
-                                                         (fact-atom fact)
-                                                         bindings)))
-                         (multiple-value-bind (new-bindings new-matched-facts)
-                             (match-premises other-premises
-                                             database
-                                             first-bindings
-                                             (cons fact matched-facts))
-                           (unless (eq +match-fail+ new-bindings)
-                             (return (values new-bindings new-matched-facts))))))))))
+  (if (null premises)
+      match
+      (let* ((premise (first premises))
+             (other-premises (rest premises))
+             (pred (atom-predicate (premise-atom premise)))
+             (sc (gethash pred (database-predicate-scs database)))
+             (table (ecase sc
+                      (:rd (database-rd-store database))
+                      (:in (database-in-store database))
+                      (:sub (database-sub-store database)))))
+        (loop :for fact :in (gethash pred table)
+              :unless (and (eq :in sc)
+                           (not (premise-rd-p premise))
+                           (member (fact-id fact)
+                                   (match-consumed-facts match)
+                                   :key #'fact-id))
+                :do (let ((first-bindings (match-atom (premise-atom premise)
+                                                      (fact-atom fact)
+                                                      (match-bindings match))))
+                      (unless (eq +match-fail+ first-bindings)
+                        (let ((new-match (match-premises other-premises
+                                                         database
+                                                         (extend-match-bindings
+                                                          (extend-match-fact
+                                                           match
+                                                           fact
+                                                           (and (eq :in sc)
+                                                                (not (premise-rd-p premise))))
+                                                          first-bindings))))
+                          (unless (eq +match-fail+ new-match)
+                            (return new-match)))))
+              :finally (return +match-fail+)))))
