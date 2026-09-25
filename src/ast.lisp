@@ -19,6 +19,13 @@
   (args nil :type list
             :read-only t))
 
+(defstruct (premise
+            (:constructor make-premise (atom rd-p)))
+  (atom nil :type atom
+            :read-only t)
+  (rd-p nil :type boolean
+            :read-only t))
+
 (defstruct (rule
             (:constructor make-rule (lhs rhs)))
   (lhs nil :type list
@@ -43,6 +50,11 @@
           (every #'ast-equal-p
                  (atom-args a)
                  (atom-args b))))
+    (premise
+     (and (ast-equal-p (premise-atom a)
+                       (premise-atom b))
+          (eq (premise-rd-p a)
+              (premise-rd-p b))))
     (rule
      (and (rule-p b)
           (every #'ast-equal-p
