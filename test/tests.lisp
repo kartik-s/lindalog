@@ -225,3 +225,10 @@
     (is (eq 'player (lindalog:constant-value (first (lindalog:atom-args (lindalog:premise-atom p))))))
     (is (eq 'gate (lindalog:constant-value (second (lindalog:atom-args (lindalog:premise-atom p))))))
     (is (lindalog:premise-rd-p p))))
+
+(test match-premises-empty-premises-succeeds
+  (let* ((database (lindalog::make-database))
+         (match (lindalog::make-match))
+         (new-match (lindalog::match-premises nil database match)))
+    (is (eq lindalog::+no-bindings+
+            (lindalog::match-bindings new-match)))))

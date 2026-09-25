@@ -29,4 +29,7 @@
    #:rule-rhs
 
    #:ast-equal-p
+
+   #:make-database
+   #:add-fact
    ))
