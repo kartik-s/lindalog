@@ -36,12 +36,14 @@
         (store (ecase sc
                  (:rd (database-rd-store database))
                  (:in (database-in-store database))
-                 (:sub (database-sub-store database)))))
-    (unless (gethash pred store)
-      (setf (gethash pred store) nil))
-    (push (make-fact (incf (database-next-id database))
-                     atom)
-          (gethash pred store))))
+                 (:sub (database-sub-store database))))
+        (fact (make-fact (incf (database-next-id database))
+                         atom)))
+    (if (eq :in sc)
+        (push fact (gethash pred store))
+        (pushnew fact (gethash pred store)
+                 :key #'fact-atom
+                 :test #'ast-equal-p))))
 
 (defun add-predicate (pred sc database)
   "Add PRED's SC to databaes."
