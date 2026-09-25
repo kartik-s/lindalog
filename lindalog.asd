@@ -25,4 +25,5 @@
   ((:module "test"
     :components
     ((:file "package")
-     (:file "tests")))))
+     (:file "ast")
+     (:file "matching")))))

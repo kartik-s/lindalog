@@ -1,19 +1,10 @@
-;;;; tests.lisp
+;;;; matching.lisp
 
 (in-package :lindalog/tests)
 
-(def-suite lindalog)
 (in-suite lindalog)
 
-(test constant-with-symbol-value
-  (let ((c (lindalog:make-constant 'x)))
-    (is (lindalog:constant-p c))
-    (is (eql 'x (lindalog:constant-value c)))))
-
-(test constant-with-number-value
-  (let ((c (lindalog:make-constant 4)))
-    (is (lindalog:constant-p c))
-    (is (eql 4 (lindalog:constant-value c)))))
+;;; MATCH-TERM
 
 (test match-term-unequal-constants-fails
   (let ((a (lindalog:make-constant 'a))
@@ -26,11 +17,6 @@
         (b (lindalog:make-constant 3)))
     (is (eq lindalog::+no-bindings+
             (lindalog::match-term a b lindalog::+no-bindings+)))))
-
-(test variable-with-symbol-name
-  (let ((v (lindalog:make-variable 'x)))
-    (is (lindalog:variable-p v))
-    (is (eq 'x (lindalog:variable-name v)))))
 
 (test match-term-unbound-variable-binds-number
   (let* ((var (lindalog:make-variable 'at))
@@ -73,15 +59,7 @@
                                (lindalog:make-constant 'b)
                                bindings)))))
 
-(test atom-with-predicate-and-arguments
-  (let ((a (lindalog:make-atom
-            'at
-            (list (lindalog:make-constant 'player)
-                  (lindalog:make-constant 'gate)))))
-    (is (lindalog:atom-p a))
-    (is (eq 'at (lindalog:atom-predicate a)))
-    (is (eq 'player (lindalog:constant-value (first (lindalog:atom-args a)))))
-    (is (eq 'gate (lindalog:constant-value (second (lindalog:atom-args a)))))))
+;;; MATCH-ATOM
 
 (test match-atom-equal-ground-atoms-succeeds
   (let ((a (lindalog:make-atom 'p (list (lindalog:make-constant 'a)
@@ -214,17 +192,7 @@
     (is (eq lindalog::+match-fail+
             (lindalog::match-atom a b lindalog::+no-bindings+)))))
 
-(test premise-with-atom-and-rd-p
-  (let* ((a (lindalog:make-atom
-            'at
-            (list (lindalog:make-constant 'player)
-                  (lindalog:make-constant 'gate))))
-         (p (lindalog:make-premise a t)))
-    (is (lindalog:atom-p (lindalog:premise-atom p)))
-    (is (eq 'at (lindalog:atom-predicate (lindalog:premise-atom p))))
-    (is (eq 'player (lindalog:constant-value (first (lindalog:atom-args (lindalog:premise-atom p))))))
-    (is (eq 'gate (lindalog:constant-value (second (lindalog:atom-args (lindalog:premise-atom p))))))
-    (is (lindalog:premise-rd-p p))))
+;;; MATCH-PREMISES
 
 (test match-premises-empty-premises-succeeds
   (let* ((database (lindalog::make-database))
