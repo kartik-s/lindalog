@@ -4,6 +4,8 @@
   :description "A multiset rewriting language"
   :author "Kartik Singh <kartiksingh_ma@yahoo.com>"
   :version "0.0.1"
+  :depends-on ("alexandria"
+               )
   :serial t
   :components
   ((:module "src"

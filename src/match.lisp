@@ -5,8 +5,9 @@
 (defconstant +match-fail+ :match-fail
   "Indicates match failure")
 
-(defconstant +no-bindings+ '((t . t))
-  "Indicates match success with no variables")
+(alexandria:define-constant +no-bindings+ '((t . t))
+  :test #'equalp
+  :documentation "Indicates match success with no variables")
 
 (defun get-binding (var bindings)
   "Find a (var . val) pair in a binding list."
