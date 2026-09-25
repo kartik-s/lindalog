@@ -10,6 +10,7 @@
     :components
     ((:file "package")
      (:file "ast")
+     (:file "state")
      (:file "match")
      (:file "lindalog")))))
 
