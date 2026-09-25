@@ -194,9 +194,142 @@
 
 ;;; MATCH-PREMISES
 
+(defun make-test-database (predicate-scs atoms)
+  (let ((database (lindalog:make-database)))
+    (dolist (pair predicate-scs)
+      (lindalog::add-predicate (car pair) (cdr pair) database))
+    (dolist (atom atoms)
+      (lindalog::add-fact atom
+                          (cdr (assoc (lindalog:atom-predicate atom)
+                                      predicate-scs))
+                          database))
+    database))
+
 (test match-premises-empty-premises-succeeds
   (let* ((database (lindalog::make-database))
          (match (lindalog::make-match))
          (new-match (lindalog::match-premises nil database match)))
     (is (eq lindalog::+no-bindings+
             (lindalog::match-bindings new-match)))))
+
+(test match-premises-one-premise-succeeds
+  (let ((database (make-test-database
+                   '((p . :rd))
+                   (list (lindalog:make-atom 'p (list (lindalog:make-constant 'a))))))
+        (premise (lindalog:make-premise
+                  (lindalog:make-atom 'p (list (lindalog:make-variable 'x)))
+                  t)))
+    (is (lindalog::bindings-equal-p (list (cons (lindalog:make-variable 'x)
+                                                (lindalog:make-constant 'a)))
+                                    (lindalog::match-bindings
+                                     (lindalog::match-premises
+                                      (list premise)
+                                      database
+                                      (lindalog::make-match)))))))
+
+(test match-premises-one-premise-fails
+  (let ((database (make-test-database
+                   '((q . :rd))
+                   (list (lindalog:make-atom 'q (list (lindalog:make-constant 'a))))))
+        (premise (lindalog:make-premise
+                  (lindalog:make-atom 'p (list (lindalog:make-variable 'x)))
+                  t)))
+    (is (eq lindalog::+match-fail+
+            (lindalog::match-premises
+             (list premise)
+             database
+             (lindalog::make-match))))))
+
+(test match-premises-shared-variable-succeeds
+  (let ((database (make-test-database
+                   '((p . :rd)
+                     (q . :rd))
+                   (list (lindalog:make-atom 'p (list (lindalog:make-constant 'a)))
+                         (lindalog:make-atom 'q (list (lindalog:make-constant 'a))))))
+        (premises (list (lindalog:make-premise
+                         (lindalog:make-atom 'p (list (lindalog:make-variable 'x)))
+                         t)
+                        (lindalog:make-premise
+                         (lindalog:make-atom 'q (list (lindalog:make-variable 'x)))
+                         t))))
+    (is (lindalog::bindings-equal-p (list (cons (lindalog:make-variable 'x)
+                                                (lindalog:make-constant 'a)))
+                                    (lindalog::match-bindings
+                                     (lindalog::match-premises
+                                      premises
+                                      database
+                                      (lindalog::make-match)))))))
+
+(test match-premises-shared-variable-inconsistent-fails
+  (let ((database (make-test-database
+                   '((p . :rd)
+                     (q . :rd))
+                   (list (lindalog:make-atom 'p (list (lindalog:make-constant 'a)))
+                         (lindalog:make-atom 'q (list (lindalog:make-constant 'b))))))
+        (premises (list (lindalog:make-premise
+                         (lindalog:make-atom 'p (list (lindalog:make-variable 'x)))
+                         t)
+                        (lindalog:make-premise
+                         (lindalog:make-atom 'q (list (lindalog:make-variable 'x)))
+                         t))))
+    (is (eq lindalog::+match-fail+
+            (lindalog::match-premises
+             premises
+             database
+             (lindalog::make-match))))))
+
+(test match-premises-backtracks-to-earlier-premise
+  (let ((database (make-test-database
+                   '((p . :in)
+                     (q . :in))
+                   (list (lindalog:make-atom 'p (list (lindalog:make-constant 'a)))
+                         (lindalog:make-atom 'p (list (lindalog:make-constant 'b)))
+                         (lindalog:make-atom 'q (list (lindalog:make-constant 'b))))))
+        (premises (list (lindalog:make-premise
+                         (lindalog:make-atom 'p (list (lindalog:make-variable 'x)))
+                         t)
+                        (lindalog:make-premise
+                         (lindalog:make-atom 'q (list (lindalog:make-variable 'x)))
+                         t))))
+    (is (lindalog::bindings-equal-p (list (cons (lindalog:make-variable 'x)
+                                                (lindalog:make-constant 'b)))
+                                    (lindalog::match-bindings
+                                     (lindalog::match-premises
+                                      premises
+                                      database
+                                      (lindalog::make-match)))))))
+
+(test match-premises-preserves-existing-bindings
+  (let ((database (make-test-database
+                   '((p . :in)
+                     (q . :in))
+                   (list (lindalog:make-atom 'p (list (lindalog:make-constant 'a))))))
+        (premises (list (lindalog:make-premise
+                         (lindalog:make-atom 'p (list (lindalog:make-variable 'x)))
+                         t)))
+        (match (lindalog::extend-match-bindings (lindalog::make-match)
+                                                (list (cons (lindalog:make-variable 'x)
+                                                            (lindalog:make-constant 'a))))))
+    (is (lindalog::bindings-equal-p (list (cons (lindalog:make-variable 'x)
+                                                (lindalog:make-constant 'a)))
+                                    (lindalog::match-bindings
+                                     (lindalog::match-premises
+                                      premises
+                                      database
+                                      match))))))
+
+(test match-premises-inconsistent-existing-binding-fails
+  (let ((database (make-test-database
+                   '((p . :in))
+                   (list (lindalog:make-atom 'p (list (lindalog:make-constant 'a))))))
+        (premises (list (lindalog:make-premise
+                         (lindalog:make-atom 'p (list (lindalog:make-variable 'x)))
+                         t)))
+        (match (lindalog::extend-match-bindings (lindalog::make-match)
+                                                (list (cons (lindalog:make-variable 'x)
+                                                            (lindalog:make-constant 'b))))))
+    (is (eq lindalog::+match-fail+
+            (lindalog::match-premises
+             premises
+             database
+             match)))))
