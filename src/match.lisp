@@ -111,10 +111,13 @@ or +MATCH-FAIL+ on failure."
    :read-facts (match-read-facts match)
    :consumed-facts (match-consumed-facts match)))
 
-(defun match-premises (premises database match)
-  "Find a match in DATABASE for the conjunction of PREMISES."
+(defun match-premises (premises database match &optional (accept-p (constantly t)))
+  "Find a match in DATABASE for the conjunction of PREMISES that
+satisfies ACCEPT-P, or +MATCH-FAIL+ if none exists."
   (if (null premises)
-      match
+      (if (funcall accept-p match)
+          match
+          +match-fail+)
       (let* ((premise (first premises))
              (other-premises (rest premises))
              (pred (atom-predicate (premise-atom premise)))
@@ -141,7 +144,8 @@ or +MATCH-FAIL+ on failure."
                                                            fact
                                                            (and (eq :in sc)
                                                                 (not (premise-rd-p premise))))
-                                                          first-bindings))))
+                                                          first-bindings)
+                                                         accept-p)))
                           (unless (eq +match-fail+ new-match)
                             (return new-match)))))
               :finally (return +match-fail+)))))
