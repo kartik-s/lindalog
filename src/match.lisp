@@ -122,10 +122,11 @@ satisfies ACCEPT-P, or +MATCH-FAIL+ if none exists."
              (other-premises (rest premises))
              (pred (atom-predicate (premise-atom premise)))
              (sc (gethash pred (database-predicate-scs database)))
-             (table (ecase sc
+             (table (case sc
                       (:rd (database-rd-store database))
                       (:in (database-in-store database))
-                      (:sub (database-sub-store database)))))
+                      (:sub (database-sub-store database))
+                      (otherwise (return-from match-premises +match-fail+)))))
         (loop :for fact :in (gethash pred table)
               :unless (and (eq :in sc)
                            (not (premise-rd-p premise))
