@@ -113,7 +113,7 @@ or +MATCH-FAIL+ on failure."
 
 (defun match-premises (premises database match &optional (accept-p (constantly t)))
   "Find a match in DATABASE for the conjunction of PREMISES that
-satisfies ACCEPT-P, or +MATCH-FAIL+ if none exists."
+satisfies ACCEPT-P, or return +MATCH-FAIL+ if none exists."
   (if (null premises)
       (if (funcall accept-p match)
           match
