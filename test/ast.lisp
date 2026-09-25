@@ -16,7 +16,7 @@
 
 (test variable-with-symbol-name
   (let ((v (lindalog:make-variable 'x)))
-    (is (lidalog:variable-p v))
+    (is (lindalog:variable-p v))
     (is (eq 'x (lindalog:variable-name v)))))
 
 (test atom-with-predicate-and-arguments
