@@ -43,6 +43,11 @@
                      atom)
           (gethash pred store))))
 
+(defun add-predicate (pred sc database)
+  "Add PRED's SC to databaes."
+  (setf (gethash pred (database-predicate-scs database))
+        sc))
+
 (defstruct interpreter-state
   (rules nil
    :type list
