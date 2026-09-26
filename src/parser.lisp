@@ -23,10 +23,11 @@
                                    term)))))
 
 (defun parse-atom (atom)
+  "Parse a list into an atom AST node."
   (cond ((not (alexandria:proper-list-p atom))
          (error 'syntax-error
                 :form atom
-                :message (format nil "Atom is not a list")))
+                :message (format nil "Atom is not a proper list")))
         ((null atom)
          (error 'syntax-error
                 :form atom
