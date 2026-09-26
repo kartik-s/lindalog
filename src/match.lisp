@@ -128,26 +128,25 @@ satisfies ACCEPT-P, or return +MATCH-FAIL+ if none exists."
                       (:in (database-in-store database))
                       (:sub (database-sub-store database))
                       (otherwise (return-from match-premises +match-fail+)))))
-        (loop :for fact :in (gethash pred table)
-              :unless (and (eq :in sc)
-                           (not (premise-rd-p premise))
-                           (member (fact-id fact)
-                                   (match-consumed-facts match)
-                                   :key #'fact-id))
-                :do (let ((first-bindings (match-atom (premise-atom premise)
-                                                      (fact-atom fact)
-                                                      (match-bindings match))))
-                      (unless (eq +match-fail+ first-bindings)
-                        (let ((new-match (match-premises other-premises
-                                                         database
-                                                         (extend-match-bindings
-                                                          (extend-match-fact
-                                                           match
-                                                           fact
-                                                           (and (eq :in sc)
-                                                                (not (premise-rd-p premise))))
-                                                          first-bindings)
-                                                         accept-p)))
-                          (unless (eq +match-fail+ new-match)
-                            (return new-match)))))
-              :finally (return +match-fail+)))))
+        (dolist (fact (gethash pred table) (return +match-fail+))
+          (unless (and (eq :in sc)
+                       (not (premise-rd-p premise))
+                       (member (fact-id fact)
+                               (match-consumed-facts match)
+                               :key #'fact-id))
+            (let ((first-bindings (match-atom (premise-atom premise)
+                                              (fact-atom fact)
+                                              (match-bindings match))))
+              (unless (eq +match-fail+ first-bindings)
+                (let ((new-match (match-premises other-premises
+                                                 database
+                                                 (extend-match-bindings
+                                                  (extend-match-fact
+                                                   match
+                                                   fact
+                                                   (and (eq :in sc)
+                                                        (not (premise-rd-p premise))))
+                                                  first-bindings)
+                                                 accept-p)))
+                  (unless (eq +match-fail+ new-match)
+                    (return new-match))))))))))
