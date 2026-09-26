@@ -28,4 +28,5 @@
     :components
     ((:file "package")
      (:file "ast")
-     (:file "matching")))))
+     (:file "match")
+     (:file "parser")))))

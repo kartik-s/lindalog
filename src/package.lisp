@@ -32,4 +32,11 @@
 
    #:make-database
    #:add-fact
+
+   #:lindalog-error
+   #:source-error
+   #:syntax-error
+   #:validation-error
+
+   #:parse-atom
    ))
