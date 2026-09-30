@@ -65,3 +65,26 @@
                  (t (make-atom predicate (mapcar (lambda (arg)
                                                    (parse-term arg atom))
                                                  args))))))))
+
+(defun parse-premise (premise)
+  "Parse a list into a premise AST node."
+  (cond ((not (alexandria:proper-list-p premise))
+         (error 'syntax-error
+                :form premise
+                :message "Premise must either be (:rd <atom>) or <atom>"))
+        ((null premise)
+         (error 'syntax-error
+                :form premise
+                :message "Premise is NIL"))
+        ((eq :rd (first premise))
+         (if (/= 2 (length premise))
+             (error 'syntax-error
+                    :form premise
+                    :message "rd premise must be of the form (rd <atom>)")
+             (make-premise (parse-atom (second premise)) t)))
+        ((and (symbolp (first premise))
+              (string= 'rd (first premise)))
+         (error 'syntax-error
+                :form premise
+                :message (format nil  "use :rd to mark a read-only-premise: ~s" premise)))
+        (t (make-premise (parse-atom premise) nil))))

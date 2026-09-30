@@ -43,5 +43,7 @@
    #:syntax-error
    #:validation-error
 
+   #:parse-term
    #:parse-atom
+   #:parse-premise
    ))

@@ -94,3 +94,89 @@
         (is (typep e 'lindalog:syntax-error))
         (is (search (prin1-to-string culprit)
                     (princ-to-string e)))))))
+
+;;; PARSE-PREMISE
+
+(test parse-premise-with-plain-atom
+  (is (lindalog:ast-equal-p
+       (lindalog:parse-premise '(p ?x))
+       (lindalog:make-premise
+        (lindalog:make-atom 'p (list (lindalog:make-variable '?x)))
+        nil))))
+
+(test parse-premise-with-rd-wrapped-atom
+  (is (lindalog:ast-equal-p
+       (lindalog:parse-premise '(:rd (p ?x)))
+       (lindalog:make-premise
+        (lindalog:make-atom 'p (list (lindalog:make-variable '?x)))
+        t))))
+
+(test parse-premise-with-rd-preserves-inner-atom
+  (is (lindalog:ast-equal-p
+       (lindalog:premise-atom
+        (lindalog:parse-premise '(:rd (p ?x))))
+       (lindalog:make-atom 'p (list (lindalog:make-variable '?x))))))
+
+(test parse-premise-with-non-keyword-rd
+  (signals lindalog:syntax-error
+   (lindalog:parse-premise '(rd (p)))))
+
+(test parse-premise-rejects-non-list
+  (signals lindalog:syntax-error
+   (lindalog:parse-premise 'p)))
+
+(test parse-premise-rejects-number
+  (signals lindalog:syntax-error
+    (lindalog:parse-premise 3)))
+
+(test parse-premise-rejects-dotted-list
+  (signals lindalog:syntax-error
+    (lindalog:parse-premise '(p . ?x))))
+
+(test parse-premise-rejects-empty-premise
+ (signals lindalog:syntax-error
+   (lindalog:parse-premise nil)))
+
+(test parse-premise-rejects-rd-without-argument
+  (signals lindalog:syntax-error
+    (lindalog:parse-premise '(:rd))))
+
+(test parse-premise-rejects-rd-with-extra-argument
+  (signals lindalog:syntax-error
+    (lindalog:parse-premise '(:rd (p) (q)))))
+
+(test parse-premise-rejects-dotted-rd
+  (signals lindalog:syntax-error
+    (lindalog:parse-premise '(:rd . p))))
+
+(test parse-premise-rejects-nested-rd
+  (signals lindalog:syntax-error
+    (lindalog:parse-premise '(:rd (:rd p)))))
+
+(test parse-premise-rejects-rd-with-non-list-argument
+  (signals lindalog:syntax-error
+    (lindalog:parse-premise '(:rd p))))
+
+(test parse-premise-rejects-malformed-plain-atom
+  (signals lindalog:syntax-error
+    (lindalog:parse-premise '(3 a))))
+
+(test parse-premise-rejects-malformed-atom-inside-rd
+  (signals lindalog:syntax-error
+    (lindalog:parse-premise '(:rd (3 a)))))
+
+(test parse-premise-error-carries-form
+  (let ((form '(rd (p ?x))))
+    (handler-case
+        (lindalog:parse-premise form)
+      (lindalog:syntax-error (e)
+        (is (typep e 'lindalog:syntax-error))
+        (is (eq form (lindalog::source-error-form e)))))))
+
+(test parse-premise-inner-error-carries-inner-form
+  (let ((culprit '(3 a)))
+    (handler-case
+        (lindalog:parse-premise `(:rd ,culprit))
+      (lindalog:syntax-error (e)
+        (is (typep e 'lindalog:syntax-error))
+        (is (search "3" (princ-to-string e)))))))
