@@ -4,6 +4,74 @@
 
 (in-suite lindalog)
 
+;;; PARSE-TERM
+
+(test parse-term-variable
+  (is (lindalog:ast-equal-p
+       (lindalog:make-variable '?x)
+       (lindalog:parse-term '?x nil))))
+
+(test parse-term-constant-symbol
+  (is (lindalog:ast-equal-p
+       (lindalog:make-constant 'a)
+       (lindalog:parse-term 'a nil))))
+
+(test parse-term-integer
+  (is (lindalog:ast-equal-p
+       (lindalog:make-constant 3)
+       (lindalog:parse-term 3 nil))))
+
+(test parse-term-negative-integer
+  (is (lindalog:ast-equal-p
+       (lindalog:make-constant -3)
+       (lindalog:parse-term -3 nil))))
+
+(test parse-term-large-integer
+  (is (lindalog:ast-equal-p
+       (lindalog:make-constant (1+ most-positive-fixnum))
+       (lindalog:parse-term (1+ most-positive-fixnum) nil))))
+
+(test parse-term-t
+  (is (lindalog:ast-equal-p
+       (lindalog:make-constant 't)
+       (lindalog:parse-term 't nil))))
+
+(test parse-term-rejects-bare-question-mark
+  (signals lindalog:syntax-error
+    (lindalog:parse-term '? nil)))
+
+(test parse-term-rejects-nil
+  (signals lindalog:syntax-error
+    (lindalog:parse-term nil nil)))
+
+(test parse-term-rejects-string
+  (signals lindalog:syntax-error
+    (lindalog:parse-term "a" nil)))
+
+(test parse-term-rejects-float
+  (signals lindalog:syntax-error
+    (lindalog:parse-term 1.5 nil)))
+
+(test parse-term-rejects-ratio
+  (signals lindalog:syntax-error
+    (lindalog:parse-term 1/2 nil)))
+
+(test parse-term-rejects-character
+  (signals lindalog:syntax-error
+    (lindalog:parse-term #\a nil)))
+
+(test parse-term-rejects-list
+  (signals lindalog:syntax-error
+    (lindalog:parse-term '(q a) nil)))
+
+(test parse-term-error-carries-enclosing-atom
+  (let ((form '(p "a")))
+    (handler-case
+        (lindalog:parse-atom form)
+      (lindalog:syntax-error (e)
+        (is (typep e 'lindalog:syntax-error))
+        (is (eq form (lindalog::source-error-form e)))))))
+
 ;;; PARSE-ATOM
 
 (test parse-atom-with-no-arguments
