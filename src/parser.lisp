@@ -20,7 +20,7 @@
          (make-constant term))
         (t (error 'syntax-error
                   :form context
-                  :message (format nil "Invalid term: ~a"
+                  :message (format nil "invalid term: ~a"
                                    term)))))
 
 (defun parse-atom (atom)
@@ -28,35 +28,35 @@
   (cond ((not (alexandria:proper-list-p atom))
          (error 'syntax-error
                 :form atom
-                :message (format nil "Atom is not a proper list")))
+                :message (format nil "atom is not a proper list")))
         ((null atom)
          (error 'syntax-error
                 :form atom
-                :message (format nil "Atom is an empty list")))
+                :message (format nil "atom is an empty list")))
         (t
          (let ((predicate (first atom))
                (args (rest atom)))
            (cond ((not (symbolp predicate))
                   (error 'syntax-error
                          :form atom
-                         :message (format nil "Atom predicate is not a symbol: ~s"
+                         :message (format nil "atom predicate is not a symbol: ~s"
                                           predicate)))
                  ((or (member predicate '(defrule defpredicate rd)
                               :test #'string=)
                       (eq :rd predicate))
                   (error 'syntax-error
                          :form atom
-                         :message (format nil "Reserved symbol used as an atom predicate: ~s"
+                         :message (format nil "reserved symbol used as an atom predicate: ~s"
                                           predicate)))
                  ((variable-symbol-p predicate)
                   (error 'syntax-error
                          :form atom
-                         :message (format nil "Variable used as an atom predicate: ~s"
+                         :message (format nil "variable used as an atom predicate: ~s"
                                           predicate)))
                  ((keywordp predicate)
                   (error 'syntax-error
                          :form atom
-                         :message (format nil "Keyword used as an atom predicate: ~s"
+                         :message (format nil "keyword used as an atom predicate: ~s"
                                           predicate)))
                  ((null predicate)
                   (error 'syntax-error
@@ -71,16 +71,16 @@
   (cond ((not (alexandria:proper-list-p premise))
          (error 'syntax-error
                 :form premise
-                :message "Premise must either be (:rd <atom>) or <atom>"))
+                :message "premise must either be (:rd <atom>) or <atom>"))
         ((null premise)
          (error 'syntax-error
                 :form premise
-                :message "Premise is NIL"))
+                :message "premise is NIL"))
         ((eq :rd (first premise))
          (if (/= 2 (length premise))
              (error 'syntax-error
                     :form premise
-                    :message "rd premise must be of the form (rd <atom>)")
+                    :message ":rd premise must be of the form (:rd <atom>)")
              (make-premise (parse-atom (second premise)) t)))
         ((and (symbolp (first premise))
               (string= 'rd (first premise)))
