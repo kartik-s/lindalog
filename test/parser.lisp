@@ -108,43 +108,58 @@
           'p)))
 
 (test parse-atom-with-bare-question-mark
-  (signals lindalog:syntax-error (lindalog:parse-atom '(p ?))))
+  (signals lindalog:syntax-error
+    (lindalog:parse-atom '(p ?))))
 
 (test parse-atom-rejects-non-list
-  (signals lindalog:syntax-error (lindalog:parse-atom 'p)))
+  (signals lindalog:syntax-error
+    (lindalog:parse-atom 'p)))
 
 (test parse-atom-rejects-empty-list
-  (signals lindalog:syntax-error (lindalog:parse-atom '())))
+  (signals lindalog:syntax-error
+    (lindalog:parse-atom '())))
 
 (test parse-atom-rejects-dotted-list
-  (signals lindalog:syntax-error (lindalog:parse-atom '(p . a))))
+  (signals lindalog:syntax-error
+    (lindalog:parse-atom '(p . a))))
 
 (test parse-atom-rejects-numeric-predicate
-  (signals lindalog:syntax-error (lindalog:parse-atom '(3 a))))
+  (signals lindalog:syntax-error
+    (lindalog:parse-atom '(3 a))))
 
 (test parse-atom-rejects-nil-predicate
-  (signals lindalog:syntax-error (lindalog:parse-atom '(nil a))))
+  (signals lindalog:syntax-error
+    (lindalog:parse-atom '(nil a))))
 
 (test parse-atom-rejects-variable-predicate
-  (signals lindalog:syntax-error (lindalog:parse-atom '(?p a))))
+  (signals lindalog:syntax-error
+    (lindalog:parse-atom '(?p a))))
 
 (test parse-atom-rejects-keyword-predicate
-  (signals lindalog:syntax-error (lindalog:parse-atom '(:p a))))
+  (signals lindalog:syntax-error
+    (lindalog:parse-atom '(:p a))))
 
 (test parse-atom-rejects-reserved-predicates
-  (signals lindalog:syntax-error (lindalog:parse-atom '(defrule a)))
-  (signals lindalog:syntax-error (lindalog:parse-atom '(defpredicate a)))
-  (signals lindalog:syntax-error (lindalog:parse-atom '(rd a)))
-  (signals lindalog:syntax-error (lindalog:parse-atom '(:rd a))))
+  (signals lindalog:syntax-error
+    (lindalog:parse-atom '(defrule a)))
+  (signals lindalog:syntax-error
+    (lindalog:parse-atom '(defpredicate a)))
+  (signals lindalog:syntax-error
+    (lindalog:parse-atom '(rd a)))
+  (signals lindalog:syntax-error
+    (lindalog:parse-atom '(:rd a))))
 
 (test parse-atom-rejects-string-argument
-  (signals lindalog:syntax-error (lindalog:parse-atom '(p "a"))))
+  (signals lindalog:syntax-error
+    (lindalog:parse-atom '(p "a"))))
 
 (test parse-atom-rejects-float-argument
-  (signals lindalog:syntax-error (lindalog:parse-atom '(p 1.5))))
+  (signals lindalog:syntax-error
+    (lindalog:parse-atom '(p 1.5))))
 
 (test parse-atom-rejects-nested-list-argument
-  (signals lindalog:syntax-error (lindalog:parse-atom '(p (q a)))))
+  (signals lindalog:syntax-error
+    (lindalog:parse-atom '(p (q a)))))
 
 (test parse-atom-error-carries-form
   (let ((form '(3 a)))
@@ -252,8 +267,8 @@
 ;;; PARSE-CONCLUSION
 (test parse-conclusion-with-atom
   (is (lindalog:ast-equal-p
-       (lindalog:parse-conclusion '(p ?x a))
-       (lindalog:parse-atom '(p ?x a)))))
+       (lindalog:parse-atom '(p ?x a))
+       (lindalog:parse-conclusion '(p ?x a)))))
 
 (test parse-conclusion-rejects-rd-marker
   (signals lindalog:syntax-error
