@@ -10,7 +10,11 @@
               #\?)))
 
 (defun parse-term (term context)
-  (cond ((variable-symbol-p term)
+  (cond ((null term)
+         (error 'syntax-error
+                :form context
+                :message "term cannot be nil"))
+        ((variable-symbol-p term)
          (make-variable term))
         ((and (symbolp term)
               (not (string= '? term))
