@@ -66,7 +66,7 @@
 (test parse-atom-rejects-reserved-predicates
   (signals lindalog:syntax-error (lindalog:parse-atom '(defrule a)))
   (signals lindalog:syntax-error (lindalog:parse-atom '(defpredicate a)))
-  (signals lindalog:syntax-error (lindalog:parse-atom '(rd a))))
+  (signals lindalog:syntax-error (lindalog:parse-atom '(:rd a))))
 
 (test parse-atom-rejects-string-argument
   (signals lindalog:syntax-error (lindalog:parse-atom '(p "a"))))

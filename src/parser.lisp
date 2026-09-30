@@ -41,8 +41,9 @@
                          :form atom
                          :message (format nil "Atom predicate is not a symbol: ~s"
                                           predicate)))
-                 ((member predicate '(defrule defpredicate rd)
-                          :test #'string=)
+                 ((or (member predicate '(defrule defpredicate)
+                              :test #'string=)
+                      (eq :rd predicate))
                   (error 'syntax-error
                          :form atom
                          :message (format nil "Reserved symbol used as an atom predicate: ~s"
