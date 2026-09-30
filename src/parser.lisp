@@ -4,6 +4,7 @@
 
 (defun variable-symbol-p (x)
   (and (symbolp x)
+       (not (keywordp x))
        (<= 2 (length (symbol-name x)))
        (equal (char (symbol-name x) 0)
               #\?)))
