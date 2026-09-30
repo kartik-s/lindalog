@@ -4,6 +4,8 @@
 
 (in-suite lindalog)
 
+;;; PARSE-ATOM
+
 (test parse-atom-with-no-arguments
   (is (lindalog:ast-equal-p
        (lindalog:make-atom 'p '())
@@ -63,7 +65,7 @@
 
 (test parse-atom-rejects-reserved-predicates
   (signals lindalog:syntax-error (lindalog:parse-atom '(defrule a)))
-  (signals lindalog:syntax-error (lindalog:parse-atom '(defpred a)))
+  (signals lindalog:syntax-error (lindalog:parse-atom '(defpredicate a)))
   (signals lindalog:syntax-error (lindalog:parse-atom '(rd a))))
 
 (test parse-atom-rejects-string-argument
