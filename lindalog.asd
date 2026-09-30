@@ -12,6 +12,8 @@
     :components
     ((:file "package")
      (:file "ast")
+     (:file "conditions")
+     (:file "parser")
      (:file "state")
      (:file "match")
      (:file "lindalog")))))
