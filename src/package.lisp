@@ -38,5 +38,10 @@
    #:syntax-error
    #:validation-error
 
+   #:lindalog-error
+   #:source-error
+   #:syntax-error
+   #:validation-error
+
    #:parse-atom
    ))
