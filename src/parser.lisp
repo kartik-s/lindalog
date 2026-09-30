@@ -41,21 +41,21 @@
                          :form atom
                          :message (format nil "Atom predicate is not a symbol: ~s"
                                           predicate)))
-                 ((member predicate '(defrule defpred rd)
+                 ((member predicate '(defrule defpredicate rd)
                           :test #'string=)
                   (error 'syntax-error
                          :form atom
-                         :message (format nil "Reserved symbol ~s used as an atom predicate"
+                         :message (format nil "Reserved symbol used as an atom predicate: ~s"
                                           predicate)))
                  ((variable-symbol-p predicate)
                   (error 'syntax-error
                          :form atom
-                         :message (format nil "Variable ~s used as an atom predicate"
+                         :message (format nil "Variable used as an atom predicate: ~s"
                                           predicate)))
                  ((keywordp predicate)
                   (error 'syntax-error
                          :form atom
-                         :message (format nil "Keyword ~s used as an atom predicate"
+                         :message (format nil "Keyword used as an atom predicate: ~s"
                                           predicate)))
                  ((null predicate)
                   (error 'syntax-error
