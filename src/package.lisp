@@ -46,4 +46,5 @@
    #:parse-term
    #:parse-atom
    #:parse-premise
+   #:parse-conclusion
    ))

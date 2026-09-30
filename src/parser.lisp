@@ -88,3 +88,12 @@
                 :form premise
                 :message (format nil  "use :rd to mark a read-only-premise: ~s" premise)))
         (t (make-premise (parse-atom premise) nil))))
+
+(defun parse-conclusion (conclusion)
+  "Parse a list into an atom AST node, checking that :rd is not used."
+  (cond ((and (alexandria:proper-list-p conclusion)
+              (eq :rd (first conclusion)))
+         (error 'syntax-error
+                :form conclusion
+                :message ":rd can only be used in premises"))
+        (t (parse-atom conclusion))))

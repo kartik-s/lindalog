@@ -180,3 +180,25 @@
       (lindalog:syntax-error (e)
         (is (typep e 'lindalog:syntax-error))
         (is (search "3" (princ-to-string e)))))))
+
+;;; PARSE-CONCLUSION
+(test parse-conclusion-with-atom
+  (is (lindalog:ast-equal-p
+       (lindalog:parse-conclusion '(p ?x a))
+       (lindalog:parse-atom '(p ?x a)))))
+
+(test parse-conclusion-rejects-rd-marker
+  (signals lindalog:syntax-error
+    (lindalog:parse-conclusion '(:rd (p ?x)))))
+
+(test parse-conclusion-rejects-malformed-atom
+  (signals lindalog:syntax-error
+    (lindalog:parse-conclusion '(3 a))))
+
+(test parse-conclusion-error-carries-form
+  (let ((form '(3 ?x)))
+    (handler-case
+        (lindalog:parse-premise form)
+      (lindalog:syntax-error (e)
+        (is (typep e 'lindalog:syntax-error))
+        (is (eq form (lindalog::source-error-form e)))))))
