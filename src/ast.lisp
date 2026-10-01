@@ -64,6 +64,8 @@
      (and (atom-p b)
           (string= (atom-predicate a)
                    (atom-predicate b))
+          (= (length (atom-args a))
+             (length (atom-args b)))
           (every #'ast-equal-p
                  (atom-args a)
                  (atom-args b))))
@@ -77,11 +79,17 @@
                    (pred-decl-name b))
           (eq (pred-decl-store a)
               (pred-decl-store b))
+          (= (length (pred-decl-args a))
+             (length (pred-decl-args b)))
           (every #'string=
                  (pred-decl-args a)
                  (pred-decl-args b))))
     (rule
      (and (rule-p b)
+          (= (length (rule-lhs a))
+             (length (rule-lhs b)))
+          (= (length (rule-rhs a))
+             (length (rule-rhs b)))
           (every #'ast-equal-p
                  (rule-lhs a)
                  (rule-lhs b))

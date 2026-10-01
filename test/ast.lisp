@@ -41,3 +41,9 @@
     (is (eq 'gate (lindalog:constant-value (second (lindalog:atom-args (lindalog:premise-atom p))))))
     (is (lindalog:premise-rd-p p))))
 
+(test ast-equal-p-same-first-argument-and-different-length
+  (is (not (lindalog:ast-equal-p
+            (lindalog:make-atom 'p (list (lindalog:make-constant 'a)))
+            (lindalog:make-atom 'p (list (lindalog:make-constant 'a)
+                                         (lindalog:make-constant 'b)))))))
+
