@@ -50,7 +50,7 @@ malformed."
                          :form form
                          :message (format nil "atom predicate is not a symbol: ~s"
                                           predicate)))
-                 ((or (member predicate '(defrule defpredicate rd)
+                 ((or (member predicate '(defrule defpred deffact rd)
                               :test #'string=)
                       (eq :rd predicate))
                   (error 'syntax-error

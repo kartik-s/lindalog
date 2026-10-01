@@ -143,7 +143,9 @@
   (signals lindalog:syntax-error
     (lindalog:parse-atom '(defrule a)))
   (signals lindalog:syntax-error
-    (lindalog:parse-atom '(defpredicate a)))
+    (lindalog:parse-atom '(defpred a)))
+  (signals lindalog:syntax-error
+    (lindalog:parse-atom '(deffact a)))
   (signals lindalog:syntax-error
     (lindalog:parse-atom '(rd a)))
   (signals lindalog:syntax-error
