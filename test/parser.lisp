@@ -287,3 +287,131 @@
       (lindalog:syntax-error (e)
         (is (typep e 'lindalog:syntax-error))
         (is (eq form (lindalog::source-error-form e)))))))
+
+;;; PARSE-PRED-DECL
+
+(test parse-pred-decl-with-rd-store
+  (is (lindalog:ast-equal-p
+       (lindalog:make-pred-decl 'foo :rd '(bar))
+       (lindalog:parse-pred-decl '(defpred foo :rd (bar))))))
+
+(test parse-pred-decl-with-in-store
+  (is (lindalog:ast-equal-p
+       (lindalog:make-pred-decl 'foo :in '(bar))
+       (lindalog:parse-pred-decl '(defpred foo :in (bar))))))
+
+(test parse-pred-decl-with-sub-store
+  (is (lindalog:ast-equal-p
+       (lindalog:make-pred-decl 'foo :sub '(bar))
+       (lindalog:parse-pred-decl '(defpred foo :sub (bar))))))
+
+(test parse-pred-decl-with-arguments
+  (is (lindalog:ast-equal-p
+       (lindalog:make-pred-decl 'foo :rd '(bar baz))
+       (lindalog:parse-pred-decl '(defpred foo :rd (bar baz))))))
+
+(test parse-pred-decl-with-no-arguments
+  (is (lindalog:ast-equal-p
+       (lindalog:make-pred-decl 'foo :rd '())
+       (lindalog:parse-pred-decl '(defpred foo :rd ())))))
+
+(test parse-pred-decl-preserves-argument-order
+  (is (lindalog:ast-equal-p
+       (lindalog:make-pred-decl 'foo :rd '(a b c))
+       (lindalog:parse-pred-decl '(defpred foo :rd (a b c))))))
+
+(test parse-pred-decl-rejects-duplicate-argument-names
+  (signals lindalog:syntax-error
+    (lindalog:parse-pred-decl '(defpred foo :rd (a a)))))
+
+(test parse-pred-decl-rejects-dotted-form
+  (signals lindalog:syntax-error
+    (lindalog:parse-pred-decl '(defpred foo . :rd))))
+
+(test parse-pred-decl-rejects-missing-parts
+  (signals lindalog:syntax-error
+    (lindalog:parse-pred-decl '(defpred foo :rd))))
+
+(test parse-pred-decl-rejects-extra-parts
+  (signals lindalog:syntax-error
+    (lindalog:parse-pred-decl '(defpred foo :rd () bar))))
+
+(test parse-pred-decl-rejects-nil-name
+  (signals lindalog:syntax-error
+    (lindalog:parse-pred-decl '(defpred nil :rd ()))))
+
+(test parse-pred-decl-rejects-numeric-name
+  (signals lindalog:syntax-error
+    (lindalog:parse-pred-decl '(defpred 3 :rd ()))))
+
+(test parse-pred-decl-rejects-keyword-name
+  (signals lindalog:syntax-error
+    (lindalog:parse-pred-decl '(defpred :foo :rd ()))))
+
+(test parse-pred-decl-rejects-variable-name
+  (signals lindalog:syntax-error
+    (lindalog:parse-pred-decl '(defpred ?foo :rd ()))))
+
+(test parse-pred-decl-rejects-reserved-name
+  (signals lindalog:syntax-error
+    (lindalog:parse-pred-decl '(defpred rd :rd ()))))
+
+(test parse-pred-decl-rejects-nil-store
+  (signals lindalog:syntax-error
+    (lindalog:parse-pred-decl '(defpred foo nil ()))))
+
+(test parse-pred-decl-rejects-nil-unknown-store
+  (signals lindalog:syntax-error
+    (lindalog:parse-pred-decl '(defpred foo :bar ()))))
+
+(test parse-pred-decl-rejects-nil-non-keyword-store
+  (signals lindalog:syntax-error
+    (lindalog:parse-pred-decl '(defpred foo rd ()))))
+
+(test parse-pred-decl-rejects-non-list-arguments
+  (signals lindalog:syntax-error
+    (lindalog:parse-pred-decl '(defpred foo :rd bar))))
+
+(test parse-pred-decl-rejects-dotted-arguments
+  (signals lindalog:syntax-error
+    (lindalog:parse-pred-decl '(defpred foo :rd (bar . baz)))))
+
+(test parse-pred-decl-rejects-non-symbol-argument
+  (signals lindalog:syntax-error
+    (lindalog:parse-pred-decl '(defpred foo :rd (bar 2)))))
+
+(test parse-pred-decl-rejects-variable-argument
+  (signals lindalog:syntax-error
+    (lindalog:parse-pred-decl '(defpred foo :rd (?bar)))))
+
+(test parse-pred-decl-rejects-keyword-argument
+  (signals lindalog:syntax-error
+    (lindalog:parse-pred-decl '(defpred foo :rd (:bar)))))
+
+(test parse-pred-decl-rejects-reserved-argument
+  (signals lindalog:syntax-error
+    (lindalog:parse-pred-decl '(defpred foo :rd (bar rd)))))
+
+(test parse-pred-decl-shape-error-carries-form
+  (let ((form '(defpred foo :rd)))
+    (handler-case
+        (lindalog:parse-pred-decl form)
+      (lindalog:syntax-error (e)
+        (is (typep e 'lindalog:syntax-error))
+        (is (eq form (lindalog::source-error-form e)))))))
+
+(test parse-pred-decl-argument-error-carries-argument-list
+  (let ((form '(defpred foo :rd (bar 2))))
+    (handler-case
+        (lindalog:parse-pred-decl form)
+      (lindalog:syntax-error (e)
+        (is (typep e 'lindalog:syntax-error))
+        (is (eq form (lindalog::source-error-form e)))))))
+
+(test parse-pred-decl-error-message-names-culprit
+  (let ((form '(defpred foo :bar (x y))))
+    (handler-case
+        (lindalog:parse-pred-decl form)
+      (lindalog:syntax-error (e)
+        (is (typep e 'lindalog:syntax-error))
+        (is (search ":BAR" (princ-to-string e)))))))

@@ -11,6 +11,17 @@ followed by at least one more character."
        (equal (char (symbol-name x) 0)
               #\?)))
 
+(defparameter *reserved-names* '(defrule defpred deffact rd in sub))
+(defparameter *reserved-keywords* '(:rd :in :sub))
+
+(defun reserved-name-p (name)
+  (member name *reserved-names*
+          :test #'string=))
+
+(defun reserved-keyword-p (keyword)
+  (member keyword *reserved-keywords*
+          :test #'eq))
+
 (defun parse-term (form context)
   "Parse FORM into a constant or variable AST node, signaling
 SYNTAX-ERROR if FORM is malformed."
@@ -50,9 +61,8 @@ malformed."
                          :form form
                          :message (format nil "atom predicate is not a symbol: ~s"
                                           predicate)))
-                 ((or (member predicate '(defrule defpred deffact rd)
-                              :test #'string=)
-                      (eq :rd predicate))
+                 ((or (reserved-name-p predicate)
+                      (reserved-keyword-p predicate))
                   (error 'syntax-error
                          :form form
                          :message (format nil "reserved symbol used as an atom predicate: ~s"
@@ -108,3 +118,56 @@ malformed or marked :RD."
                 :form form
                 :message ":rd can only be used in premises"))
         (t (parse-atom form))))
+
+(defun parse-pred-decl (form)
+  "Parse FORM into a PRED-DECL AST node, signaling SYNTAX-ERROR if FORM
+is malformed."
+  (if (or (not (alexandria:proper-list-p form))
+          (/= 4 (length form)))
+      (error 'syntax-error
+             :form form
+             :message "predicate declaration must be of the form (defpred <name> <store> (<arg-name>*))")
+      (let ((name (second form))
+            (store (third form))
+            (args (fourth form)))
+        (cond ((null name)
+               (error 'syntax-error
+                      :form form
+                      :message "predicate name is NIL"))
+              ((not (alexandria:proper-list-p args))
+               (error 'syntax-error
+                      :form form
+                      :message "predicate arguments must be a proper list"))
+              ((or (not (symbolp name))
+                   (variable-symbol-p name)
+                   (keywordp name))
+               (error 'syntax-error
+                      :form form
+                      :message "predicate name cannot be a variable, a keyword, or a non-symbol"))
+              ((reserved-name-p name)
+               (error 'syntax-error
+                      :form form
+                      :message (format nil "predicate name is reserved: ~s" name)))
+              ((not (member store '(:rd :in :sub)))
+               (error 'syntax-error
+                      :form form
+                      :message (format nil "predicate store must be one of :rd, :in, or :sub, got: ~s"
+                                       store)))
+              (t (loop :with parsed-args := nil
+                       :for arg :in args
+                       :do (cond ((or (not (symbolp arg))
+                                      (variable-symbol-p arg)
+                                      (keywordp arg))
+                                  (error 'syntax-error
+                                         :form form
+                                         :message "predicate argument cannot be a variable, a keyword, or a non-symbol"))
+                                 ((reserved-name-p arg)
+                                  (error 'syntax-error
+                                         :form form
+                                         :message (format nil "predicate argument is reserved: ~s" arg)))
+                                 ((member arg parsed-args :test #'string=)
+                                  (error 'syntax-error
+                                         :form form
+                                         :message (format nil "duplicate predicate argument: ~s" arg)))
+                                 (t (push arg parsed-args)))
+                       :finally (return (make-pred-decl name store (nreverse parsed-args)))))))))

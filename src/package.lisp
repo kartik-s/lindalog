@@ -23,6 +23,11 @@
    #:premise-atom
    #:premise-rd-p
 
+   #:make-pred-decl
+   #:pred-decl-name
+   #:pred-decl-store
+   #:pred-decl-args
+
    #:make-rule
    #:rule-p
    #:rule-lhs
@@ -47,4 +52,5 @@
    #:parse-atom
    #:parse-premise
    #:parse-conclusion
+   #:parse-pred-decl
    ))

@@ -26,6 +26,20 @@
   (rd-p nil :type boolean
             :read-only t))
 
+(defstruct (pred-decl
+            (:constructor make-pred-decl (name store args)))
+  (name nil :type symbol
+            :read-only t)
+  (store nil :type symbol
+             :read-only t)
+  (args nil :type list
+            :read-only t))
+
+(defstruct (init-fact
+            (:constructor make-init-fact (atom)))
+  (atom nil :type atom
+            :read-only t))
+
 (defstruct (rule
             (:constructor make-rule (lhs rhs)))
   (lhs nil :type list
@@ -55,6 +69,14 @@
                        (premise-atom b))
           (eq (premise-rd-p a)
               (premise-rd-p b))))
+    (pred-decl
+     (and (string= (pred-decl-name a)
+                   (pred-decl-name b))
+          (eq (pred-decl-store a)
+              (pred-decl-store b))
+          (every #'string=
+                 (pred-decl-args a)
+                 (pred-decl-args b))))
     (rule
      (and (rule-p b)
           (every #'ast-equal-p
