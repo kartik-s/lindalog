@@ -23,7 +23,7 @@ followed by at least one more character."
           :test #'eq))
 
 (defun parse-term (form context)
-  "Parse FORM into a constant or variable AST node, signaling
+  "Parse FORM into a CONSTANT or VARIABLE AST node, signaling
 SYNTAX-ERROR if FORM is malformed."
   (cond ((null form)
          (error 'syntax-error
@@ -43,7 +43,7 @@ SYNTAX-ERROR if FORM is malformed."
                                    form)))))
 
 (defun parse-atom (form)
-  "Parse FORM into an atom AST node, signaling SYNTAX-ERROR if FORM is
+  "Parse FORM into an ATOM AST node, signaling SYNTAX-ERROR if FORM is
 malformed."
   (cond ((not (alexandria:proper-list-p form))
          (error 'syntax-error
@@ -86,7 +86,7 @@ malformed."
                                                  args))))))))
 
 (defun parse-premise (form)
-  "Parse FORM into a premise AST node, signaling SYNTAX-ERROR if FORM is
+  "Parse FORM into a PREMISE AST node, signaling SYNTAX-ERROR if FORM is
 malformed."
   (cond ((not (alexandria:proper-list-p form))
          (error 'syntax-error
@@ -110,7 +110,7 @@ malformed."
         (t (make-premise (parse-atom form) nil))))
 
 (defun parse-conclusion (form)
-  "Parse FORM into an atom AST node, signaling SYNTAX-ERROR if FORM is
+  "Parse FORM into an ATOM AST node, signaling SYNTAX-ERROR if FORM is
 malformed or marked :RD."
   (cond ((and (alexandria:proper-list-p form)
               (eq :rd (first form)))
