@@ -51,16 +51,19 @@
   (typecase a
     (constant
      (and (constant-p b)
-          (eql (constant-value a)
-               (constant-value b))))
+          (if (symbolp (constant-value a))
+              (string= (constant-value a)
+                       (constant-value b))
+              (= (constant-value a)
+                 (constant-value b)))))
     (variable
      (and (variable-p b)
-          (eq (variable-name a)
-              (variable-name b))))
+          (string= (variable-name a)
+                   (variable-name b))))
     (atom
      (and (atom-p b)
-          (eq (atom-predicate a)
-              (atom-predicate b))
+          (string= (atom-predicate a)
+                   (atom-predicate b))
           (every #'ast-equal-p
                  (atom-args a)
                  (atom-args b))))
