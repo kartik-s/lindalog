@@ -3,6 +3,8 @@
 (in-package #:lindalog)
 
 (defun variable-symbol-p (x)
+  "Check if X is a non-keyword symbol whose name is a question mark
+followed by at least one more character."
   (and (symbolp x)
        (not (keywordp x))
        (<= 2 (length (symbol-name x)))
@@ -10,6 +12,8 @@
               #\?)))
 
 (defun parse-term (form context)
+  "Parse FORM into a constant or variable AST node, signaling
+SYNTAX-ERROR if FORM is malformed."
   (cond ((null form)
          (error 'syntax-error
                 :form context
@@ -28,7 +32,8 @@
                                    form)))))
 
 (defun parse-atom (form)
-  "Parse a list into an atom AST node."
+  "Parse FORM into an atom AST node, signaling SYNTAX-ERROR if FORM is
+malformed."
   (cond ((not (alexandria:proper-list-p form))
          (error 'syntax-error
                 :form form
@@ -71,7 +76,8 @@
                                                  args))))))))
 
 (defun parse-premise (form)
-  "Parse a list into a premise AST node."
+  "Parse FORM into a premise AST node, signaling SYNTAX-ERROR if FORM is
+malformed."
   (cond ((not (alexandria:proper-list-p form))
          (error 'syntax-error
                 :form form
@@ -94,7 +100,8 @@
         (t (make-premise (parse-atom form) nil))))
 
 (defun parse-conclusion (form)
-  "Parse a list into an atom AST node, checking that :rd is not used."
+  "Parse FORM into an atom AST node, signaling SYNTAX-ERROR if FORM is
+malformed or marked :RD."
   (cond ((and (alexandria:proper-list-p form)
               (eq :rd (first form)))
          (error 'syntax-error
