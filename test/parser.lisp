@@ -67,7 +67,7 @@
 (test parse-term-error-carries-enclosing-atom
   (let ((form '(p "a")))
     (handler-case
-        (lindalog:parse-atom form)
+        (progn (lindalog:parse-atom form) nil)
       (lindalog:syntax-error (e)
         (is (typep e 'lindalog:syntax-error))
         (is (eq form (lindalog::source-error-form e)))))))
@@ -166,7 +166,7 @@
 (test parse-atom-error-carries-form
   (let ((form '(3 a)))
     (handler-case
-        (lindalog:parse-atom form)
+        (progn (lindalog:parse-atom form) nil)
       (lindalog:syntax-error (e)
         (is (typep e 'lindalog:syntax-error))
         (is (eq form (lindalog::source-error-form e)))))))
@@ -174,7 +174,7 @@
 (test parse-atom-error-message-names-culprit
   (let ((culprit '?bad))
     (handler-case
-        (lindalog:parse-atom (list culprit 2))
+        (progn (lindalog:parse-atom (list culprit 2)) nil)
       (lindalog:syntax-error (e)
         (is (typep e 'lindalog:syntax-error))
         (is (search (prin1-to-string culprit)
@@ -253,7 +253,7 @@
 (test parse-premise-error-carries-form
   (let ((form '(rd (p ?x))))
     (handler-case
-        (lindalog:parse-premise form)
+        (progn (lindalog:parse-premise form) nil)
       (lindalog:syntax-error (e)
         (is (typep e 'lindalog:syntax-error))
         (is (eq form (lindalog::source-error-form e)))))))
@@ -261,7 +261,7 @@
 (test parse-premise-inner-error-carries-inner-form
   (let ((culprit '(3 a)))
     (handler-case
-        (lindalog:parse-premise `(:rd ,culprit))
+        (progn (lindalog:parse-premise `(:rd ,culprit)) nil)
       (lindalog:syntax-error (e)
         (is (typep e 'lindalog:syntax-error))
         (is (search "3" (princ-to-string e)))))))
@@ -283,7 +283,7 @@
 (test parse-conclusion-error-carries-form
   (let ((form '(3 ?x)))
     (handler-case
-        (lindalog:parse-premise form)
+        (progn (lindalog:parse-premise form) nil)
       (lindalog:syntax-error (e)
         (is (typep e 'lindalog:syntax-error))
         (is (eq form (lindalog::source-error-form e)))))))
@@ -395,7 +395,7 @@
 (test parse-pred-decl-shape-error-carries-form
   (let ((form '(defpred foo :rd)))
     (handler-case
-        (lindalog:parse-pred-decl form)
+        (progn (lindalog:parse-pred-decl form) nil)
       (lindalog:syntax-error (e)
         (is (typep e 'lindalog:syntax-error))
         (is (eq form (lindalog::source-error-form e)))))))
@@ -403,7 +403,7 @@
 (test parse-pred-decl-argument-error-carries-argument-list
   (let ((form '(defpred foo :rd (bar 2))))
     (handler-case
-        (lindalog:parse-pred-decl form)
+        (progn (lindalog:parse-pred-decl form) nil)
       (lindalog:syntax-error (e)
         (is (typep e 'lindalog:syntax-error))
         (is (eq form (lindalog::source-error-form e)))))))
@@ -411,7 +411,7 @@
 (test parse-pred-decl-error-message-names-culprit
   (let ((form '(defpred foo :bar (x y))))
     (handler-case
-        (lindalog:parse-pred-decl form)
+        (progn (lindalog:parse-pred-decl form) nil)
       (lindalog:syntax-error (e)
         (is (typep e 'lindalog:syntax-error))
         (is (search ":BAR" (princ-to-string e)))))))
