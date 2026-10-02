@@ -69,7 +69,6 @@
     (handler-case
         (progn (lindalog:parse-atom form) nil)
       (lindalog:syntax-error (e)
-        (is (typep e 'lindalog:syntax-error))
         (is (eq form (lindalog::source-error-form e)))))))
 
 ;;; PARSE-ATOM
@@ -168,7 +167,6 @@
     (handler-case
         (progn (lindalog:parse-atom form) nil)
       (lindalog:syntax-error (e)
-        (is (typep e 'lindalog:syntax-error))
         (is (eq form (lindalog::source-error-form e)))))))
 
 (test parse-atom-error-message-names-culprit
@@ -176,7 +174,6 @@
     (handler-case
         (progn (lindalog:parse-atom (list culprit 2)) nil)
       (lindalog:syntax-error (e)
-        (is (typep e 'lindalog:syntax-error))
         (is (search (prin1-to-string culprit)
                     (princ-to-string e)))))))
 
@@ -255,7 +252,6 @@
     (handler-case
         (progn (lindalog:parse-premise form) nil)
       (lindalog:syntax-error (e)
-        (is (typep e 'lindalog:syntax-error))
         (is (eq form (lindalog::source-error-form e)))))))
 
 (test parse-premise-inner-error-carries-inner-form
@@ -263,7 +259,6 @@
     (handler-case
         (progn (lindalog:parse-premise `(:rd ,culprit)) nil)
       (lindalog:syntax-error (e)
-        (is (typep e 'lindalog:syntax-error))
         (is (search "3" (princ-to-string e)))))))
 
 ;;; PARSE-CONCLUSION
@@ -285,7 +280,6 @@
     (handler-case
         (progn (lindalog:parse-premise form) nil)
       (lindalog:syntax-error (e)
-        (is (typep e 'lindalog:syntax-error))
         (is (eq form (lindalog::source-error-form e)))))))
 
 ;;; PARSE-PRED-DECL
@@ -397,7 +391,6 @@
     (handler-case
         (progn (lindalog:parse-pred-decl form) nil)
       (lindalog:syntax-error (e)
-        (is (typep e 'lindalog:syntax-error))
         (is (eq form (lindalog::source-error-form e)))))))
 
 (test parse-pred-decl-argument-error-carries-argument-list
@@ -405,7 +398,6 @@
     (handler-case
         (progn (lindalog:parse-pred-decl form) nil)
       (lindalog:syntax-error (e)
-        (is (typep e 'lindalog:syntax-error))
         (is (eq form (lindalog::source-error-form e)))))))
 
 (test parse-pred-decl-error-message-names-culprit
@@ -413,5 +405,83 @@
     (handler-case
         (progn (lindalog:parse-pred-decl form) nil)
       (lindalog:syntax-error (e)
-        (is (typep e 'lindalog:syntax-error))
         (is (search ":BAR" (princ-to-string e)))))))
+
+;;; PARSE-INIT-FACT
+
+(test parse-init-fact-with-constant-arguments
+  (is (lindalog:ast-equal-p
+       (lindalog:make-init-fact
+        (lindalog:make-atom 'p (list (lindalog:make-constant 'a)
+                                     (lindalog:make-constant 'b))))
+       (lindalog:parse-init-fact '(deffact (p a b))))))
+
+(test parse-init-fact-with-no-arguments
+  (is (lindalog:ast-equal-p
+       (lindalog:make-init-fact
+        (lindalog:make-atom 'p '()))
+       (lindalog:parse-init-fact '(deffact (p))))))
+
+(test parse-init-fact-with-integer-argument
+  (is (lindalog:ast-equal-p
+       (lindalog:make-init-fact
+        (lindalog:make-atom 'p (list (lindalog:make-constant 'a)
+                                     (lindalog:make-constant 3))))
+       (lindalog:parse-init-fact '(deffact (p a 3))))))
+
+(test parse-init-fact-matches-parse-atom
+  (let ((atom '(p a b)))
+    (is (lindalog:ast-equal-p
+         (lindalog:parse-atom atom)
+         (lindalog:init-fact-atom
+          (lindalog:parse-init-fact `(deffact ,atom)))))))
+
+(test parse-init-fact-rejects-dotted-form
+  (signals lindalog:syntax-error
+    (lindalog:parse-init-fact '(deffact . p))))
+
+(test parse-init-fact-rejects-missing-atom
+  (signals lindalog:syntax-error
+    (lindalog:parse-init-fact '(deffact))))
+
+(test parse-init-fact-rejects-extra-parts
+  (signals lindalog:syntax-error
+    (lindalog:parse-init-fact '(deffact (p a b) (q c)))))
+
+(test parse-init-fact-rejects-non-list-atom
+  (signals lindalog:syntax-error
+    (lindalog:parse-init-fact '(deffact p))))
+
+(test parse-init-fact-rejects-malformed-atom
+  (signals lindalog:syntax-error
+    (lindalog:parse-init-fact '(deffact (3 a)))))
+
+(test parse-init-fact-rejects-variable
+  (signals lindalog:syntax-error
+    (lindalog:parse-init-fact '(deffact (p ?x b)))))
+
+(test parse-init-fact-rejects-rd-marker
+  (signals lindalog:syntax-error
+    (lindalog:parse-init-fact '(deffact (:rd (p a))))))
+
+(test parse-init-fact-shape-error-carries-form
+  (let ((form '(deffact . p)))
+    (handler-case
+        (progn (lindalog:parse-init-fact form) nil)
+      (lindalog:syntax-error (e)
+        (is (eq form (lindalog::source-error-form e)))))))
+
+(test parse-init-fact-groundness-error-carries-atom
+  (let ((atom '(p ?x b)))
+    (handler-case
+        (progn (lindalog:parse-init-fact `(deffact ,atom)) nil)
+      (lindalog:syntax-error (e)
+        (is (eq atom (lindalog::source-error-form e)))))))
+
+(test parse-init-fact-groundness-message-names-variable
+  (let ((culprit '?x))
+    (handler-case
+        (progn (lindalog:parse-init-fact `(deffact (p ,culprit b))) nil)
+      (lindalog:syntax-error (e)
+        (is (search (prin1-to-string culprit)
+                    (princ-to-string e)))))))

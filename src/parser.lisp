@@ -171,3 +171,20 @@ is malformed."
                                          :message (format nil "duplicate predicate argument: ~s" arg)))
                                  (t (push arg parsed-args)))
                        :finally (return (make-pred-decl name store (nreverse parsed-args)))))))))
+
+(defun parse-init-fact (form)
+  "Parse FORM into an INIT-FACT AST node, signaling SYNTAX-ERROR if FORM
+is malformed."
+  (if (or (not (alexandria:proper-list-p form))
+          (/= 2 (length form)))
+      (error 'syntax-error
+             :form form
+             :message "deffact must be of the form (deffact <atom>)")
+      (let* ((atom (parse-atom (second form)))
+             (vars (atom-variables atom)))
+        (if (null vars)
+            (make-init-fact atom)
+            (error 'syntax-error
+                   :form (second form)
+                   :message (format nil "fact atom contains a variable and is therefore not ground: ~s"
+                                    (first vars)))))))

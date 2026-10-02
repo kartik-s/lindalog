@@ -19,6 +19,10 @@
   (args nil :type list
             :read-only t))
 
+(defun atom-variables (atom)
+  (remove-if-not #'variable-p
+                 (atom-args atom)))
+
 (defstruct (premise
             (:constructor make-premise (atom rd-p)))
   (atom nil :type atom
@@ -84,6 +88,9 @@
           (every #'string=
                  (pred-decl-args a)
                  (pred-decl-args b))))
+    (init-fact
+     (ast-equal-p (init-fact-atom a)
+                  (init-fact-atom b)))
     (rule
      (and (rule-p b)
           (= (length (rule-lhs a))

@@ -24,9 +24,14 @@
    #:premise-rd-p
 
    #:make-pred-decl
+   #:pred-decl-p
    #:pred-decl-name
    #:pred-decl-store
    #:pred-decl-args
+
+   #:make-init-fact
+   #:init-fact-p
+   #:init-fact-atom
 
    #:make-rule
    #:rule-p
@@ -53,4 +58,5 @@
    #:parse-premise
    #:parse-conclusion
    #:parse-pred-decl
+   #:parse-init-fact
    ))
