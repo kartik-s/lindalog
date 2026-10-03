@@ -134,10 +134,6 @@ is malformed."
                (error 'syntax-error
                       :form form
                       :message "predicate name is NIL"))
-              ((not (alexandria:proper-list-p args))
-               (error 'syntax-error
-                      :form form
-                      :message "predicate arguments must be a proper list"))
               ((or (not (symbolp name))
                    (variable-symbol-p name)
                    (keywordp name))
@@ -153,6 +149,10 @@ is malformed."
                       :form form
                       :message (format nil "predicate store must be one of :rd, :in, or :sub, got: ~s"
                                        store)))
+              ((not (alexandria:proper-list-p args))
+               (error 'syntax-error
+                      :form form
+                      :message "predicate arguments must be a proper list"))
               (t (loop :with parsed-args := nil
                        :for arg :in args
                        :do (cond ((or (not (symbolp arg))
