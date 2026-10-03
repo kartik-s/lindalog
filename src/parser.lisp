@@ -188,3 +188,56 @@ is malformed."
                    :form (second form)
                    :message (format nil "fact atom contains a variable and is therefore not ground: ~s"
                                     (first vars)))))))
+
+(defun parse-rule (form)
+  "Parse FORM into a RULE AST node, signaling SYNTAX-ERROR if FORM is
+malformed."
+  (if (or (not (alexandria:proper-list-p form))
+          (not (member (length form) '(4 5)))
+          (and (stringp (third form))
+               (/= 5 (length form)))
+          (and (= 5 (length form))
+               (not (stringp (third form)))))
+      (error 'syntax-error
+             :form form
+             :message "rule must be of the format (defrule <name> <docstring>? (:when <atom>+) (:then <atom>+))")
+      (let* ((docstring-p (stringp (third form)))
+             (name (second form))
+             (docstring (when (= 5 (length form))
+                          (third form)))
+             (lhs (if docstring-p
+                      (fourth form)
+                      (third form)))
+             (rhs (if docstring-p
+                      (fifth form)
+                      (fourth form))))
+        (cond ((null name)
+               (error 'syntax-error
+                      :form form
+                      :message "rule name is NIL"))
+              ((or (not (symbolp name))
+                   (variable-symbol-p name)
+                   (keywordp name))
+               (error 'syntax-error
+                      :form form
+                      :message "rule name cannot be a variable, a keyword, or a non-symbol"))
+              ((reserved-name-p name)
+               (error 'syntax-error
+                      :form form
+                      :message (format nil "rule name is reserved: ~s" name)))
+              ((or (not (alexandria:proper-list-p lhs))
+                   (not (eq :when (first lhs)))
+                   (< (length lhs) 2))
+               (error 'syntax-error
+                      :form lhs
+                      :message "lhs of rule must be of the form (:when <atom>+)"))
+              ((or (not (alexandria:proper-list-p rhs))
+                   (not (eq :then (first rhs))))
+               (error 'syntax-error
+                      :form rhs
+                      :message "rhs of rule must be of the form (:then <atom>*)"))
+              (t (make-rule
+                  name
+                  (mapcar #'parse-premise (rest lhs))
+                  (mapcar #'parse-conclusion (rest rhs))
+                  :docstring docstring))))))

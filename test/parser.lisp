@@ -485,3 +485,238 @@
       (lindalog:syntax-error (e)
         (is (search (prin1-to-string culprit)
                     (princ-to-string e)))))))
+
+;;; PARSE-RULE
+
+(test parse-rule-with-one-premise-and-conclusion
+  (is (lindalog:ast-equal-p
+       (lindalog:make-rule
+        'foo
+        (list (lindalog:make-premise
+               (lindalog:make-atom 'p (list (lindalog:make-constant 'a)))
+               nil))
+        (list (lindalog:make-atom 'q (list (lindalog:make-constant 'a)))))
+       (lindalog:parse-rule '(defrule foo
+                              (:when (p a))
+                              (:then (q a)))))))
+
+(test parse-rule-with-several-premises
+  (is (lindalog:ast-equal-p
+       (lindalog:make-rule
+        'foo
+        (list (lindalog:make-premise
+               (lindalog:make-atom'p (list (lindalog:make-constant 'a)))
+               nil)
+              (lindalog:make-premise
+               (lindalog:make-atom 'p (list (lindalog:make-constant 'b)))
+               nil)
+              (lindalog:make-premise
+               (lindalog:make-atom 'q (list (lindalog:make-constant 'c)))
+               t))
+        (list (lindalog:make-atom 'q (list (lindalog:make-constant 'a)))))
+       (lindalog:parse-rule '(defrule foo
+                              (:when (p a) (p b) (:rd (q c)))
+                              (:then (q a)))))))
+
+(test parse-rule-with-rd-premise
+  (is (lindalog:ast-equal-p
+       (lindalog:make-rule
+        'foo
+        (list (lindalog:make-premise
+               (lindalog:make-atom 'p (list (lindalog:make-constant 'a)))
+               nil)
+              (lindalog:make-premise
+               (lindalog:make-atom 'q (list (lindalog:make-constant 'b)))
+               t))
+        (list (lindalog:make-atom 'q (list (lindalog:make-constant 'a)))))
+       (lindalog:parse-rule '(defrule foo
+                              (:when (p a) (:rd (q b)))
+                              (:then (q a)))))))
+
+(test parse-rule-with-several-conclusions
+  (is (lindalog:ast-equal-p
+       (lindalog:make-rule
+        'foo
+        (list (lindalog:make-premise
+               (lindalog:make-atom 'q (list (lindalog:make-constant 'a)))
+               nil))
+        (list (lindalog:make-atom'p (list (lindalog:make-constant 'a)))
+              (lindalog:make-atom 'p (list (lindalog:make-constant 'b)))
+              (lindalog:make-atom 'q (list (lindalog:make-constant 'c)))))
+       (lindalog:parse-rule '(defrule foo
+                              (:when (q a))
+                              (:then (p a) (p b) (q c)))))))
+
+(test parse-rule-with-empty-then
+  (is (lindalog:ast-equal-p
+       (lindalog:make-rule
+        'foo
+        (list (lindalog:make-premise
+               (lindalog:make-atom 'p (list (lindalog:make-constant 'a)))
+               nil))
+        nil)
+       (lindalog:parse-rule '(defrule foo
+                              (:when (p a))
+                              (:then))))))
+
+(test parse-rule-with-docstring
+  (let ((a (lindalog:make-rule
+            'foo
+            (list (lindalog:make-premise
+                   (lindalog:make-atom 'p (list (lindalog:make-constant 'a)))
+                   nil))
+            (list (lindalog:make-atom 'q (list (lindalog:make-constant 'a))))
+            :docstring "Consume (p a) and produce (q a)."))
+        (b (lindalog:parse-rule '(defrule foo
+                                  "Consume (p a) and produce (q a)."
+                                  (:when (p a))
+                                  (:then (q a))))))
+    (is (lindalog:ast-equal-p a b))
+    (is (string= (lindalog:rule-docstring a)
+                 (lindalog:rule-docstring b)))))
+
+(test parse-rule-without-docstring
+  (let ((a (lindalog:make-rule
+            'foo
+            (list (lindalog:make-premise
+                   (lindalog:make-atom 'p (list (lindalog:make-constant 'a)))
+                   nil))
+            (list (lindalog:make-atom 'q (list (lindalog:make-constant 'a))))
+            :docstring "Consume (p a) and produce (q a)."))
+        (b (lindalog:parse-rule '(defrule foo
+                                  "Consume (p a) and produce (q a)."
+                                  (:when (p a))
+                                  (:then (q a))))))
+    (is (lindalog:ast-equal-p a b))
+    (is (eq (lindalog:rule-docstring a)
+            (lindalog:rule-docstring b)))))
+
+(test parse-rule-rejects-dotted-form
+  (signals lindalog:syntax-error
+    (lindalog:parse-rule '(defrule foo . "test"))))
+
+(test parse-rule-rejects-nil-name
+  (signals lindalog:syntax-error
+    (lindalog:parse-rule '(defrule nil
+                           (:when (p a))
+                           (:then (q a))))))
+
+(test parse-rule-rejects-numeric-name
+  (signals lindalog:syntax-error
+    (lindalog:parse-rule '(defrule 34
+                           (:when (p a))
+                           (:then (q a))))))
+
+(test parse-rule-rejects-keyword-name
+  (signals lindalog:syntax-error
+    (lindalog:parse-rule '(defrule :foo
+                           (:when (p a))
+                           (:then (q a))))))
+
+(test parse-rule-rejects-variable-name
+  (signals lindalog:syntax-error
+    (lindalog:parse-rule '(defrule ?foo
+                           (:when (p a))
+                           (:then (q a))))))
+
+(test parse-rule-rejects-reserved-name
+  (signals lindalog:syntax-error
+    (lindalog:parse-rule '(defrule rd
+                           (:when (p a))
+                           (:then (q a))))))
+
+(test parse-rule-rejects-missing-when
+  (signals lindalog:syntax-error
+    (lindalog:parse-rule '(defrule rd
+                           (:then (q a))))))
+
+(test parse-rule-rejects-missing-then
+  (signals lindalog:syntax-error
+    (lindalog:parse-rule '(defrule rd
+                           (:when (p a))))))
+
+(test parse-rule-rejects-clauses-out-of-order
+  (signals lindalog:syntax-error
+    (lindalog:parse-rule '(defrule rd
+                           (:then (q a))
+                           (:when (p a))))))
+
+(test parse-rule-rejects-mispelled-clause
+  (signals lindalog:syntax-error
+    (lindalog:parse-rule '(defrule rd
+                           (:when (p a))
+                           (:the (q a))))))
+
+(test parse-rule-rejects-mispelled-clause
+  (signals lindalog:syntax-error
+    (lindalog:parse-rule '(defrule rd
+                           (:when (p a))
+                           (:the (q a))))))
+
+(test parse-rule-rejects-non-keyword-clause
+  (signals lindalog:syntax-error
+    (lindalog:parse-rule '(defrule rd
+                           (when (p a))
+                           (:then (q a))
+                           (:when (p b))))))
+
+(test parse-rule-rejects-misplaced-docstring
+  (signals lindalog:syntax-error
+    (lindalog:parse-rule '(defrule rd
+                           (:when (p a))
+                           (:then (q a))
+                           "Consume (p a) and produce (q a)."))))
+
+(test parse-rule-rejects-empty-when
+  (signals lindalog:syntax-error
+    (lindalog:parse-rule '(defrule rd
+                           (:when)
+                           (:then (q a))))))
+
+(test parse-rule-rejects-dotted-clause
+  (signals lindalog:syntax-error
+    (lindalog:parse-rule '(defrule rd
+                           (:when . (p a))
+                           (:then (q a))))))
+
+(test parse-rule-rejects-malformed-premise
+  (signals lindalog:syntax-error
+    (lindalog:parse-rule '(defrule rd
+                           (:when ((p a) :rd))
+                           (:then (q a))))))
+
+(test parse-rule-rejects-rd-conclusion
+  (signals lindalog:syntax-error
+    (lindalog:parse-rule '(defrule rd
+                           (:when (p a))
+                           (:then (:rd (q a)))))))
+
+(test parse-rule-error-carries-form
+  (let ((form '(defrule ?foo (:when (p a)) (:then q a))))
+    (handler-case
+        (progn (lindalog:parse-rule form) nil)
+      (lindalog:syntax-error (e)
+        (is (eq form (lindalog::source-error-form e)))))))
+
+(test parse-rule-error-carries-form
+  (let* ((clause '(:wen (p a))))
+    (handler-case
+        (progn (lindalog:parse-rule `(defrule foo ,clause (:then q a))) nil)
+      (lindalog:syntax-error (e)
+        (is (eq clause (lindalog::source-error-form e)))))))
+
+(test parse-rule-clause-error-carries-clause
+  (let ((culprit '?bad))
+    (handler-case
+        (progn (lindalog:parse-atom (list culprit 2)) nil)
+      (lindalog:syntax-error (e)
+        (is (search (prin1-to-string culprit)
+                    (princ-to-string e)))))))
+
+(test parse-rule-premise-error-carries-premise
+  (let ((culprit '(rd (p a))))
+    (handler-case
+        (progn (lindalog:parse-rule `(defrule foo (:when ,culprit) (:then (q a)))) nil)
+      (lindalog:syntax-error (e)
+        (is (search (prin1-to-string culprit)
+                    (princ-to-string e)))))))

@@ -35,6 +35,8 @@
 
    #:make-rule
    #:rule-p
+   #:rule-name
+   #:rule-docstring
    #:rule-lhs
    #:rule-rhs
 
@@ -59,4 +61,5 @@
    #:parse-conclusion
    #:parse-pred-decl
    #:parse-init-fact
+   #:parse-rule
    ))

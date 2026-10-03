@@ -45,7 +45,11 @@
             :read-only t))
 
 (defstruct (rule
-            (:constructor make-rule (lhs rhs)))
+            (:constructor make-rule (name lhs rhs &key docstring)))
+  (name nil :type symbol
+            :read-only t)
+  (docstring nil :type (or null string)
+                :read-only t)
   (lhs nil :type list
            :read-only t)
   (rhs nil :type list
@@ -93,6 +97,8 @@
                   (init-fact-atom b)))
     (rule
      (and (rule-p b)
+          (string= (rule-name a)
+                   (rule-name b))
           (= (length (rule-lhs a))
              (length (rule-lhs b)))
           (= (length (rule-rhs a))
