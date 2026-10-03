@@ -35,8 +35,8 @@
 
    #:make-rule
    #:rule-p
-   #:rule-when
-   #:rule-then
+   #:rule-lhs
+   #:rule-rhs
 
    #:ast-equal-p
 
