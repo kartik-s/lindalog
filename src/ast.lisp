@@ -45,10 +45,10 @@
             :read-only t))
 
 (defstruct (rule
-            (:constructor make-rule (lhs rhs)))
-  (lhs nil :type list
+            (:constructor make-rule (when then)))
+  (when nil :type list
            :read-only t)
-  (rhs nil :type list
+  (then nil :type list
            :read-only t))
 
 (defun ast-equal-p (a b)
@@ -93,14 +93,14 @@
                   (init-fact-atom b)))
     (rule
      (and (rule-p b)
-          (= (length (rule-lhs a))
-             (length (rule-lhs b)))
-          (= (length (rule-rhs a))
-             (length (rule-rhs b)))
+          (= (length (rule-when a))
+             (length (rule-when b)))
+          (= (length (rule-then a))
+             (length (rule-then b)))
           (every #'ast-equal-p
-                 (rule-lhs a)
-                 (rule-lhs b))
+                 (rule-when a)
+                 (rule-when b))
           (every #'ast-equal-p
-                 (rule-rhs a)
-                 (rule-rhs b))))
+                 (rule-then a)
+                 (rule-then b))))
     (otherwise nil)))
