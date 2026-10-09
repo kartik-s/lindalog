@@ -720,3 +720,64 @@
       (lindalog:syntax-error (e)
         (is (search (prin1-to-string culprit)
                     (princ-to-string e)))))))
+
+;;; PARSE-TOPLEVEL
+
+(test parse-toplevel-parses-defpred
+  (is (lindalog:ast-equal-p
+       (lindalog:make-pred-decl 'p :in '(a b))
+       (lindalog:parse-toplevel '(defpred p :in (a b))))))
+
+(test parse-toplevel-parses-deffact
+  (is (lindalog:ast-equal-p
+       (lindalog:make-init-fact
+        (lindalog:make-atom 'p (list (lindalog:make-constant 'a))))
+       (lindalog:parse-toplevel '(deffact (p a))))))
+
+(test parse-toplevel-parses-defrule
+  (is (lindalog:ast-equal-p
+       (lindalog:make-rule 'foo
+                           (list (lindalog:make-premise
+                                  (lindalog:make-atom 'p (list (lindalog:make-constant 'a)))
+                                  nil))
+                           (list (lindalog:make-atom 'q (list (lindalog:make-constant 'a)))))
+       (lindalog:parse-toplevel '(defrule foo (:when (p a)) (:then (q a)))))))
+
+(test parse-toplevel-dispatches-by-symbol-name
+  (is (lindalog:ast-equal-p
+       (lindalog:make-rule '#:foo
+                           (list (lindalog:make-premise
+                                  (lindalog:make-atom 'p (list (lindalog:make-constant 'a)))
+                                  nil))
+                           (list (lindalog:make-atom 'q (list (lindalog:make-constant 'a)))))
+       (lindalog:parse-toplevel '(defrule foo (:when (p a)) (:then (q a)))))))
+
+(test parse-toplevel-rejects-atom-toplevel
+  (signals lindalog:syntax-error
+    (lindalog:parse-toplevel '(p a))))
+
+(test parse-toplevel-rejects-empty-toplevel
+  (signals lindalog:syntax-error
+    (lindalog:parse-toplevel '())))
+
+(test parse-toplevel-rejects-non-symbol-head
+  (signals lindalog:syntax-error
+    (lindalog:parse-toplevel '(42 foo)))
+  (signals lindalog:syntax-error
+    (lindalog:parse-toplevel '("defrule" foo (:when (p a)) (:then (q a)))))
+  (signals lindalog:syntax-error
+    (lindalog:parse-toplevel '((defrule) foo (:when (p a)) (:then (q a))))))
+
+(test parse-toplevel-rejects-unknown-head
+  (signals lindalog:syntax-error
+    (lindalog:parse-toplevel '(defrules foo (:when (p a)) (:then (q a)))))
+  (signals lindalog:syntax-error
+    (lindalog:parse-toplevel '(deffacts foo (:when (p a)) (:then (q a))))))
+
+(test parse-toplevel-rejects-dotted-toplevel
+  (signals lindalog:syntax-error
+    (lindalog:parse-toplevel '(deffact . (p a)))))
+
+(test parse-toplevel-rejects-keyword-head
+  (signals lindalog:syntax-error
+    (lindalog:parse-toplevel '(:deffact (p a)))))

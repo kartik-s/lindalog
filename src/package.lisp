@@ -62,4 +62,5 @@
    #:parse-pred-decl
    #:parse-init-fact
    #:parse-rule
+   #:parse-toplevel
    ))

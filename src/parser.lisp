@@ -241,3 +241,19 @@ malformed."
                   (mapcar #'parse-premise (rest lhs))
                   (mapcar #'parse-conclusion (rest rhs))
                   :docstring docstring))))))
+
+(defun parse-toplevel (form)
+  "Parse FORM into one of a PRED-DECL, INIT-FACT, or RULE AST node, signaling SYNTAX-ERROR if FORM is malformed."
+  (cond ((or (not (alexandria:proper-list-p form))
+             (not (symbolp (first form)))
+             (keywordp (first form)))
+         (error 'syntax-error
+                :form form
+                :message "toplevel form must be one of (defpred ...), (deffact ...), or (defrule ...)"))
+        (t (alexandria:switch ((first form) :test #'string=)
+             ('defpred (parse-pred-decl form))
+             ('deffact (parse-init-fact form))
+             ('defrule (parse-rule form))
+             (t (error 'syntax-error
+                       :form form
+                       :message (format nil "invalid toplevel form: ~s" (first form))))))))
