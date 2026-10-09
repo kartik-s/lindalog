@@ -243,7 +243,8 @@ malformed."
                   :docstring docstring))))))
 
 (defun parse-toplevel (form)
-  "Parse FORM into one of a PRED-DECL, INIT-FACT, or RULE AST node, signaling SYNTAX-ERROR if FORM is malformed."
+  "Parse FORM into one of a PRED-DECL, INIT-FACT, or RULE AST node,
+signaling SYNTAX-ERROR if FORM is malformed."
   (cond ((or (not (alexandria:proper-list-p form))
              (not (symbolp (first form)))
              (keywordp (first form)))
