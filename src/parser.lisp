@@ -245,16 +245,30 @@ malformed."
 (defun parse-toplevel (form)
   "Parse FORM into one of a PRED-DECL, INIT-FACT, or RULE AST node,
 signaling SYNTAX-ERROR if FORM is malformed."
-  (cond ((or (not (alexandria:proper-list-p form))
-             (not (symbolp (first form)))
+  (cond ((null form)
+         (error 'syntax-error
+                :form form
+                :message "empty toplevel form; expected defpred, deffact, or defrule"))
+        ((cl:atom form)
+         (error 'syntax-error
+                :form form
+                :message (format nil "toplevel form is not a list: ~a"
+                                 form)))
+        ((not (alexandria:proper-list-p form))
+         (error 'syntax-error
+                :form form
+                :message "toplevel form is not a proper list"))
+        ((or (not (symbolp (first form)))
              (keywordp (first form)))
          (error 'syntax-error
                 :form form
-                :message "toplevel form must be one of (defpred ...), (deffact ...), or (defrule ...)"))
+                :message (format nil "invalid toplevel form: ~s; expected defpred, deffact, or defrule"
+                                 (first form))))
         (t (alexandria:switch ((first form) :test #'string=)
              ('defpred (parse-pred-decl form))
              ('deffact (parse-init-fact form))
              ('defrule (parse-rule form))
              (t (error 'syntax-error
                        :form form
-                       :message (format nil "invalid toplevel form: ~s" (first form))))))))
+                       :message (format nil "unknown toplevel form: ~s; expected defpred, deffact, or defrule"
+                                        (first form))))))))
