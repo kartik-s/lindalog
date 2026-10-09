@@ -745,16 +745,16 @@
 
 (test parse-toplevel-dispatches-by-symbol-name
   (is (lindalog:ast-equal-p
-       (lindalog:make-rule '#:foo
+       (lindalog:make-rule 'foo
                            (list (lindalog:make-premise
                                   (lindalog:make-atom 'p (list (lindalog:make-constant 'a)))
                                   nil))
                            (list (lindalog:make-atom 'q (list (lindalog:make-constant 'a)))))
-       (lindalog:parse-toplevel '(defrule foo (:when (p a)) (:then (q a)))))))
+       (lindalog:parse-toplevel '(defrule #:foo (:when (p a)) (:then (q a)))))))
 
 (test parse-toplevel-rejects-atom-toplevel
   (signals lindalog:syntax-error
-    (lindalog:parse-toplevel '(p a))))
+    (lindalog:parse-toplevel 3)))
 
 (test parse-toplevel-rejects-empty-toplevel
   (signals lindalog:syntax-error
@@ -762,7 +762,7 @@
 
 (test parse-toplevel-rejects-non-symbol-head
   (signals lindalog:syntax-error
-    (lindalog:parse-toplevel '(42 foo)))
+    (lindalog:parse-toplevel '(3 foo)))
   (signals lindalog:syntax-error
     (lindalog:parse-toplevel '("defrule" foo (:when (p a)) (:then (q a)))))
   (signals lindalog:syntax-error
@@ -776,7 +776,7 @@
 
 (test parse-toplevel-rejects-dotted-toplevel
   (signals lindalog:syntax-error
-    (lindalog:parse-toplevel '(deffact . (p a)))))
+    (lindalog:parse-toplevel '(deffact . p))))
 
 (test parse-toplevel-rejects-keyword-head
   (signals lindalog:syntax-error
