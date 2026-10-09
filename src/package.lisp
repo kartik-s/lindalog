@@ -50,10 +50,8 @@
    #:syntax-error
    #:validation-error
 
-   #:lindalog-error
-   #:source-error
-   #:syntax-error
-   #:validation-error
+   #:source-error-form
+   #:source-error-message
 
    #:parse-term
    #:parse-atom
