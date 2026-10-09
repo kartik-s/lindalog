@@ -252,7 +252,7 @@ signaling SYNTAX-ERROR if FORM is malformed."
         ((cl:atom form)
          (error 'syntax-error
                 :form form
-                :message (format nil "toplevel form is not a list: ~a"
+                :message (format nil "toplevel form is not a list: ~s"
                                  form)))
         ((not (alexandria:proper-list-p form))
          (error 'syntax-error

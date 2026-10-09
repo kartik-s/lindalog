@@ -750,11 +750,16 @@
                                   (lindalog:make-atom 'p (list (lindalog:make-constant 'a)))
                                   nil))
                            (list (lindalog:make-atom 'q (list (lindalog:make-constant 'a)))))
-       (lindalog:parse-toplevel '(defrule #:foo (:when (p a)) (:then (q a)))))))
+       (lindalog:parse-toplevel '(#:defrule foo (:when (p a)) (:then (q a)))))))
 
 (test parse-toplevel-rejects-atom-toplevel
-  (signals lindalog:syntax-error
-    (lindalog:parse-toplevel 3)))
+  (let ((culprit "defrule"))
+    (handler-case
+        (progn (lindalog:parse-toplevel "defrule") nil)
+      (lindalog:syntax-error (e)
+        (is (eq culprit (lindalog:source-error-form e)))
+        (is (search (prin1-to-string culprit)
+                    (princ-to-string e)))))))
 
 (test parse-toplevel-rejects-empty-toplevel
   (signals lindalog:syntax-error
