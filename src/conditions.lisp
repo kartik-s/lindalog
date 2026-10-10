@@ -6,18 +6,18 @@
   ())
 
 (define-condition source-error (lindalog-error)
-  ((form :initarg :form
+  ((cst :initarg :cst
          :initform nil
-         :reader source-error-form)
-   (location :initarg :location
-             :initform nil
-             :reader source-error-location)
+         :reader source-error-cst)
    (message :initarg :message
             :reader source-error-message))
   (:report (lambda (condition stream)
-             (format stream "~@[~a: ~]~a"
-                     (source-error-location condition)
-                     (source-error-message condition)))))
+             (let* ((cst (source-error-cst condition))
+                    (range (and cst (cst:source cst))))
+               (format stream "[~d-~d]: ~a"
+                       (car range)
+                       (cdr range)
+                       (source-error-message condition))))))
 
 (define-condition syntax-error (source-error)
   ())

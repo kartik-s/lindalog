@@ -5,6 +5,8 @@
   :author "Kartik Singh <kartiksingh_ma@yahoo.com>"
   :version "0.0.1"
   :depends-on ("alexandria"
+               "concrete-syntax-tree"
+               "eclector-concrete-syntax-tree"
                )
   :serial t
   :components

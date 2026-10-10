@@ -2,6 +2,7 @@
 
 (defpackage #:lindalog
   (:use #:cl)
+  (:local-nicknames (#:cst #:concrete-syntax-tree))
   (:shadow #:variable #:atom)
   (:export
 
@@ -50,7 +51,7 @@
    #:syntax-error
    #:validation-error
 
-   #:source-error-form
+   #:source-error-cst
    #:source-error-message
 
    #:parse-term

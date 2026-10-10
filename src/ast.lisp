@@ -2,18 +2,25 @@
 
 (in-package #:lindalog)
 
+(defstruct ast-node
+  (cst nil :type (or null cst:cst)
+           :read-only t))
+
 (defstruct (constant
-            (:constructor make-constant (value)))
+            (:include ast-node)
+            (:constructor make-constant (value &key cst)))
   (value nil :type (or number symbol)
              :read-only t))
 
 (defstruct (variable
-            (:constructor make-variable (name)))
+            (:include ast-node)
+            (:constructor make-variable (name &key cst)))
   (name nil :type symbol
             :read-only t))
 
 (defstruct (atom
-            (:constructor make-atom (predicate args)))
+            (:include ast-node)
+            (:constructor make-atom (predicate args &key cst)))
   (predicate nil :type symbol
                  :read-only t)
   (args nil :type list
@@ -24,14 +31,16 @@
                  (atom-args atom)))
 
 (defstruct (premise
-            (:constructor make-premise (atom rd-p)))
+            (:include ast-node)
+            (:constructor make-premise (atom rd-p &key cst)))
   (atom nil :type atom
             :read-only t)
   (rd-p nil :type boolean
             :read-only t))
 
 (defstruct (pred-decl
-            (:constructor make-pred-decl (name store args)))
+            (:include ast-node)
+            (:constructor make-pred-decl (name store args &key cst)))
   (name nil :type symbol
             :read-only t)
   (store nil :type symbol
@@ -40,12 +49,14 @@
             :read-only t))
 
 (defstruct (init-fact
-            (:constructor make-init-fact (atom)))
+            (:include ast-node)
+            (:constructor make-init-fact (atom &key cst)))
   (atom nil :type atom
             :read-only t))
 
 (defstruct (rule
-            (:constructor make-rule (name lhs rhs &key docstring)))
+            (:include ast-node)
+            (:constructor make-rule (name lhs rhs &key docstring cst)))
   (name nil :type symbol
             :read-only t)
   (docstring nil :type (or null string)
