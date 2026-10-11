@@ -74,7 +74,7 @@
         (progn (lindalog:parse-atom input)
                (fail "no error signaled"))
       (lindalog:syntax-error (e)
-        (is (eq term (lindalog::source-error-cst e)))))))
+        (is (eq term (lindalog:source-error-cst e)))))))
 
 ;;; PARSE-ATOM
 
@@ -174,7 +174,7 @@
         (progn (lindalog:parse-atom input)
                (fail "no error signaled"))
       (lindalog:syntax-error (e)
-        (is (eq pred (lindalog::source-error-cst e)))))))
+        (is (eq pred (lindalog:source-error-cst e)))))))
 
 (test parse-atom-error-message-names-culprit
   (let ((culprit '?bad))
@@ -495,7 +495,7 @@
         (progn (lindalog:parse-init-fact input)
                (fail "no error signaled"))
       (lindalog:syntax-error (e)
-        (is (eq arg (lindalog::source-error-cst e)))))))
+        (is (eq arg (lindalog:source-error-cst e)))))))
 
 ;;; PARSE-RULE
 
@@ -709,7 +709,7 @@
         (progn (lindalog:parse-rule input)
                (fail "no error signaled"))
       (lindalog:syntax-error (e)
-        (is (eq name (lindalog::source-error-cst e)))))))
+        (is (eq name (lindalog:source-error-cst e)))))))
 
 (test parse-rule-lhs-error-carries-keyword
   (let* ((input (as-cst '(defrule foo (:wen (p a)) (:then (q a)))))
@@ -718,7 +718,7 @@
         (progn (lindalog:parse-rule input)
                (fail "no error signaled"))
       (lindalog:syntax-error (e)
-        (is (eq keyword (lindalog::source-error-cst e)))))))
+        (is (eq keyword (lindalog:source-error-cst e)))))))
 
 (test parse-rule-rhs-error-carries-keyword
   (let* ((input (as-cst '(defrule foo (:when (p a)) (:the (q a)))))
