@@ -598,6 +598,13 @@
                                          (:then (q a)))))))
     (is (lindalog:ast-equal-p a b))))
 
+(test parse-rule-with-duplicate-clause
+  (signals lindalog:syntax-error
+    (lindalog:parse-rule (as-cst '(defrule foo
+                                   (:when (p a))
+                                   (:when (p a))
+                                   (:then (q a)))))))
+
 (test parse-rule-rejects-dotted-form
   (signals lindalog:syntax-error
     (lindalog:parse-rule (as-cst '(defrule foo . "test")))))
