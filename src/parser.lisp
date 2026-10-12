@@ -210,28 +210,10 @@ malformed."
     (if (not (member (length parts) '(4 5)))
         (error 'syntax-error
                :cst cst
-               :message "rule must be of the form (defrule <name> <docstring>? (:when <atom>+) (:then <atom>*))")
-        (let* ((docstring-p (= 5 (length parts)))
-               (name-cst (second parts))
-               (name (cst:raw name-cst))
-               (docstring-cst (and docstring-p
-                                   (third parts)))
-               (lhs-cst (if docstring-p
-                            (fourth parts)
-                            (third parts)))
-               (rhs-cst (if docstring-p
-                            (fifth parts)
-                            (fourth parts))))
-          (cond ((and docstring-p
-                      (cst-headed-by-p docstring-cst :when))
-                 (let ((extra-cst (if (cst-headed-by-p lhs-cst :then)
-                                      rhs-cst
-                                      lhs-cst)))
-                   (error 'syntax-error
-                          :cst extra-cst
-                          :message (format nil "extraneous form in rule: ~s"
-                                           (cst:raw extra-cst)))))
-                ((null name)
+               :message "rule must be of the form (defrule <name> (:doc <string>)? (:when <atom>+) (:then <atom>*))")
+        (let* ((name-cst (second parts))
+               (name (cst:raw name-cst)))
+          (cond ((null name)
                  (error 'syntax-error
                         :cst name-cst
                         :message "rule name is NIL"))
@@ -245,43 +227,44 @@ malformed."
                  (error 'syntax-error
                         :cst name-cst 
                         :message (format nil "rule name is reserved: ~s" name)))
-                ((and docstring-p
-                      (not (stringp (cst:raw docstring-cst))))
-                 (error 'syntax-error
-                        :cst docstring-cst
-                        :message (format nil "docstring is not a string: ~s"
-                                         (cst:raw docstring-cst))))
-                (t (let ((lhs (and (cst:proper-list-p lhs-cst)
-                                   (cst:listify lhs-cst)))
-                         (rhs (and (cst:proper-list-p rhs-cst)
-                                   (cst:listify rhs-cst))))
-                     (cond ((not lhs)
+                (t (let ((doc-cst nil)
+                         (when-cst nil)
+                         (then-cst nil))
+                     (loop :for clause-cst :in (cddr parts)
+                           :for clause := (cst:raw clause-cst)
+                           :for keyword := (first clause)
+                           :do (case keyword
+                                 (:doc (setf doc-cst clause-cst))
+                                 (:when (setf when-cst clause-cst))
+                                 (:then (setf then-cst clause-cst))
+                                 (otherwise
+                                  (error 'syntax-error
+                                         :cst (cst:first clause-cst)
+                                         :message (format nil "unknown defrule clause: ~s"
+                                                          keyword)))))
+                     (cond ((and doc-cst
+                                 (or (not (cst:rest doc-cst))
+                                     (not (stringp (cst:raw (cst:second doc-cst))))))
                             (error 'syntax-error
-                                   :cst lhs-cst
-                                   :message "lhs of rule must be of the form (:when <atom>+)"))
-                           ((not (cst-headed-by-p lhs-cst :when))
+                                   :cst doc-cst
+                                   :message ":doc clause of rule must be of the form (:doc <string>)"))
+                           ((not when-cst)
                             (error 'syntax-error
-                                   :cst (first lhs)
-                                   :message (format nil "expected :when, got: ~s"
-                                                    (cst:raw (first lhs)))))
-                           ((not (rest lhs))
+                                   :cst when-cst
+                                   :message ":when clause of rule must be of the form (:when <atom>+)"))
+                           ((not (cst:rest when-cst))
                             (error 'syntax-error
-                                   :cst lhs-cst
+                                   :cst when-cst
                                    :message ":when clause has no premises"))
-                           ((not rhs)
+                           ((not then-cst)
                             (error 'syntax-error
-                                   :cst rhs-cst
-                                   :message "rhs of rule must be of the form (:then <atom>*)"))
-                           ((not (cst-headed-by-p rhs-cst :then))
-                            (error 'syntax-error
-                                   :cst (first rhs)
-                                   :message (format nil "expected :then, got: ~s"
-                                                    (cst:raw (first rhs)))))
+                                   :cst then-cst
+                                   :message ":then clause of rule must be of the form (:then <atom>*)"))
                            (t (make-rule
                                name
-                               (mapcar #'parse-premise (rest lhs))
-                               (mapcar #'parse-conclusion (rest rhs))
-                               :docstring (and docstring-p (cst:raw docstring-cst))
+                               (mapcar #'parse-premise (rest (cst:listify when-cst)))
+                               (mapcar #'parse-conclusion (rest (cst:listify then-cst)))
+                               :docstring (and doc-cst (cst:raw (cst:second doc-cst)))
                                :cst cst))))))))))
 
 (defun parse-toplevel (cst)

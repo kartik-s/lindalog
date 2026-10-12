@@ -579,9 +579,9 @@
             (list (lindalog:make-atom 'q (list (lindalog:make-constant 'a))))
             :docstring "Consume (p a) and produce (q a)."))
         (b (lindalog:parse-rule (as-cst '(defrule foo
-                                         "Consume (p a) and produce (q a)."
-                                         (:when (p a))
-                                         (:then (q a)))))))
+                                          (:doc "Consume (p a) and produce (q a).")
+                                          (:when (p a))
+                                          (:then (q a)))))))
     (is (lindalog:ast-equal-p a b))
     (is (string= (lindalog:rule-docstring a)
                  (lindalog:rule-docstring b)))))
@@ -592,15 +592,11 @@
             (list (lindalog:make-premise
                    (lindalog:make-atom 'p (list (lindalog:make-constant 'a)))
                    nil))
-            (list (lindalog:make-atom 'q (list (lindalog:make-constant 'a))))
-            :docstring "Consume (p a) and produce (q a)."))
+            (list (lindalog:make-atom 'q (list (lindalog:make-constant 'a))))))
         (b (lindalog:parse-rule (as-cst '(defrule foo
-                                         "Consume (p a) and produce (q a)."
                                          (:when (p a))
                                          (:then (q a)))))))
-    (is (lindalog:ast-equal-p a b))
-    (is (eq (lindalog:rule-docstring a)
-            (lindalog:rule-docstring b)))))
+    (is (lindalog:ast-equal-p a b))))
 
 (test parse-rule-rejects-dotted-form
   (signals lindalog:syntax-error

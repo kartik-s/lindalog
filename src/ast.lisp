@@ -43,16 +43,20 @@
             (:constructor make-pred-decl (name store args &key cst)))
   (name nil :type symbol
             :read-only t)
+  (args nil :type list
+            :read-only t)
   (store nil :type symbol
              :read-only t)
-  (args nil :type list
-            :read-only t))
+  (docstring nil :type (or null string)
+                 :read-only t))
 
 (defstruct (init-fact
             (:include ast-node)
             (:constructor make-init-fact (atom &key cst)))
   (atom nil :type atom
-            :read-only t))
+            :read-only t)
+  (docstring nil :type (or null string)
+                 :read-only t))
 
 (defstruct (rule
             (:include ast-node)
@@ -107,6 +111,8 @@
                (init-fact-atom b)))
 
 (defun multiset-equal-p (xs ys &key (test #'eql))
+  "Check if the multisets XS and YS contain exactly the same elements in
+the same quantity."
   (and (= (length xs) (length ys))
        (loop :with remaining := (copy-list ys)
              :for x :in xs
