@@ -158,14 +158,13 @@ something not in KEYWORDS."
 is malformed."
   (let ((parts (and (cst:proper-list-p cst)
                     (cst:listify cst))))
-    (if (/= 4 (length parts))
+    (if (not (member (length parts) '(4 5)))
         (error 'syntax-error
                :cst cst
-               :message "predicate declaration must be of the form (defpred <name> <store> (<arg-name>*))")
+               :message "predicate declaration must be of the form (defpred <name> (<arg-name>*) (:store {:rd|:in:out}) (:doc <string>)?)")
         (let* ((name-cst (second parts))
                (name (cst:raw name-cst))
-               (store-cst (third parts))
-               (args-cst (fourth parts)))
+               (args-cst (third parts)))
           (cond ((cst:null name-cst)
                  (error 'syntax-error
                         :cst name-cst
@@ -180,34 +179,49 @@ is malformed."
                  (error 'syntax-error
                         :cst name-cst
                         :message (format nil "predicate name is reserved: ~s" name)))
-                ((not (member (cst:raw store-cst) '(:rd :in :sub)))
-                 (error 'syntax-error
-                        :cst store-cst
-                        :message (format nil "expected :rd, :in, or :sub for predicate store, got: ~s"
-                                         (cst:raw store-cst))))
                 ((not (cst:proper-list-p args-cst))
                  (error 'syntax-error
                         :cst args-cst
                         :message "predicate arguments must be a proper list"))
-                (t (loop :with parsed-args := nil
-                         :for arg-cst :in (cst:listify args-cst)
-                         :for arg := (cst:raw arg-cst)
-                         :do (cond ((or (not (symbolp arg))
-                                        (variable-symbol-p arg)
-                                        (keywordp arg))
-                                    (error 'syntax-error
-                                           :cst arg-cst
-                                           :message "predicate argument cannot be a variable, a keyword, or a non-symbol"))
-                                   ((reserved-name-p arg)
-                                    (error 'syntax-error
-                                           :cst arg-cst
-                                           :message (format nil "predicate argument is reserved: ~s" arg)))
-                                   ((member arg parsed-args :test #'string=)
-                                    (error 'syntax-error
-                                           :cst arg-cst
-                                           :message (format nil "duplicate predicate argument: ~s" arg)))
-                                   (t (push arg parsed-args)))
-                         :finally (return (make-pred-decl name (cst:raw store-cst) (nreverse parsed-args) :cst cst)))))))))
+                (t (let* ((clauses (collect-clauses (cdddr parts) '(:store :doc)))
+                          (store-cst (cdr (assoc :store clauses)))
+                          (doc-cst (cdr (assoc :doc clauses))))
+                     (cond ((not (= 2 (length (cst:raw store-cst))))
+                            (error 'syntax-error
+                                   :cst store-cst
+                                   :message ":store clause must be of the form (:store {:rd|:in|:sub}"))
+                           ((not (member (cst:raw (cst:second store-cst)) '(:rd :in :sub)))
+                            (error 'syntax-error
+                                   :cst (cst:second store-cst)
+                                   :message (format nil "expected :rd, :in, or :sub for predicate store, got: ~s"
+                                                    (cst:raw store-cst))))
+                           ((and doc-cst
+                                 (or (not (= 2 (length (cst:raw doc-cst))))
+                                     (not (stringp (cst:raw (cst:second doc-cst))))))
+                            (error 'syntax-error
+                                   :cst doc-cst
+                                   :message ":doc clause must be of the form (:doc <string>)"))
+                           (t (loop :with parsed-args := nil
+                                    :for arg-cst :in (cst:listify args-cst)
+                                    :for arg := (cst:raw arg-cst)
+                                    :do (cond ((or (not (symbolp arg))
+                                                   (variable-symbol-p arg)
+                                                   (keywordp arg))
+                                               (error 'syntax-error
+                                                      :cst arg-cst
+                                                      :message "predicate argument cannot be a variable, a keyword, or a non-symbol"))
+                                              ((reserved-name-p arg)
+                                               (error 'syntax-error
+                                                      :cst arg-cst
+                                                      :message (format nil "predicate argument is reserved: ~s" arg)))
+                                              ((member arg parsed-args :test #'string=)
+                                               (error 'syntax-error
+                                                      :cst arg-cst
+                                                      :message (format nil "duplicate predicate argument: ~s" arg)))
+                                              (t (push arg parsed-args)))
+                                    :finally (return (make-pred-decl name (nreverse parsed-args)
+                                                                     (cst:raw (cst:second store-cst))
+                                                                     :cst cst))))))))))))
 
 (defun parse-init-fact (cst)
   "Parse CST into an INIT-FACT AST node, signaling SYNTAX-ERROR if CST

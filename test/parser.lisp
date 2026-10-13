@@ -299,37 +299,37 @@
 
 (test parse-pred-decl-with-rd-store
   (is (lindalog:ast-equal-p
-       (lindalog:make-pred-decl 'foo :rd '(bar))
-       (lindalog:parse-pred-decl (as-cst '(defpred foo :rd (bar)))))))
+       (lindalog:make-pred-decl 'foo '(bar) :rd)
+       (lindalog:parse-pred-decl (as-cst '(defpred foo (bar) (:store :rd)))))))
 
 (test parse-pred-decl-with-in-store
   (is (lindalog:ast-equal-p
-       (lindalog:make-pred-decl 'foo :in '(bar))
-       (lindalog:parse-pred-decl (as-cst '(defpred foo :in (bar)))))))
+       (lindalog:make-pred-decl 'foo '(bar) :in)
+       (lindalog:parse-pred-decl (as-cst '(defpred foo (bar) (:store :in)))))))
 
 (test parse-pred-decl-with-sub-store
   (is (lindalog:ast-equal-p
-       (lindalog:make-pred-decl 'foo :sub '(bar))
-       (lindalog:parse-pred-decl (as-cst '(defpred foo :sub (bar)))))))
+       (lindalog:make-pred-decl 'foo '(bar) :sub)
+       (lindalog:parse-pred-decl (as-cst '(defpred foo (bar) (:store :sub)))))))
 
 (test parse-pred-decl-with-arguments
   (is (lindalog:ast-equal-p
-       (lindalog:make-pred-decl 'foo :rd '(bar baz))
-       (lindalog:parse-pred-decl (as-cst '(defpred foo :rd (bar baz)))))))
+       (lindalog:make-pred-decl 'foo '(bar baz) :rd)
+       (lindalog:parse-pred-decl (as-cst '(defpred foo (bar baz) (:store :rd)))))))
 
 (test parse-pred-decl-with-no-arguments
   (is (lindalog:ast-equal-p
-       (lindalog:make-pred-decl 'foo :rd '())
-       (lindalog:parse-pred-decl (as-cst '(defpred foo :rd ()))))))
+       (lindalog:make-pred-decl 'foo '() :rd)
+       (lindalog:parse-pred-decl (as-cst '(defpred foo () (:store :rd)))))))
 
 (test parse-pred-decl-preserves-argument-order
   (is (lindalog:ast-equal-p
-       (lindalog:make-pred-decl 'foo :rd '(a b c))
-       (lindalog:parse-pred-decl (as-cst '(defpred foo :rd (a b c)))))))
+       (lindalog:make-pred-decl 'foo '(a b c) :rd)
+       (lindalog:parse-pred-decl (as-cst '(defpred foo (a b c) (:store :rd)))))))
 
 (test parse-pred-decl-rejects-duplicate-argument-names
   (signals lindalog:syntax-error
-    (lindalog:parse-pred-decl (as-cst '(defpred foo :rd (a a))))))
+    (lindalog:parse-pred-decl (as-cst '(defpred foo (a a) (:store :rd))))))
 
 (test parse-pred-decl-rejects-dotted-form
   (signals lindalog:syntax-error
@@ -337,70 +337,70 @@
 
 (test parse-pred-decl-rejects-missing-parts
   (signals lindalog:syntax-error
-    (lindalog:parse-pred-decl (as-cst '(defpred foo :rd)))))
+    (lindalog:parse-pred-decl (as-cst '(defpred foo (:store :rd))))))
 
 (test parse-pred-decl-rejects-extra-parts
   (signals lindalog:syntax-error
-    (lindalog:parse-pred-decl (as-cst '(defpred foo :rd () bar)))))
+    (lindalog:parse-pred-decl (as-cst '(defpred foo () bar (:store :rd))))))
 
 (test parse-pred-decl-rejects-nil-name
   (signals lindalog:syntax-error
-    (lindalog:parse-pred-decl (as-cst '(defpred nil :rd ())))))
+    (lindalog:parse-pred-decl (as-cst '(defpred nil () (:store :rd))))))
 
 (test parse-pred-decl-rejects-numeric-name
   (signals lindalog:syntax-error
-    (lindalog:parse-pred-decl (as-cst '(defpred 3 :rd ())))))
+    (lindalog:parse-pred-decl (as-cst '(defpred 3 () (:store :rd))))))
 
 (test parse-pred-decl-rejects-keyword-name
   (signals lindalog:syntax-error
-    (lindalog:parse-pred-decl (as-cst '(defpred :foo :rd ())))))
+    (lindalog:parse-pred-decl (as-cst '(defpred :foo () (:store :rd))))))
 
 (test parse-pred-decl-rejects-variable-name
   (signals lindalog:syntax-error
-    (lindalog:parse-pred-decl (as-cst '(defpred ?foo :rd ())))))
+    (lindalog:parse-pred-decl (as-cst '(defpred ?foo () (:store :rd))))))
 
 (test parse-pred-decl-rejects-reserved-name
   (signals lindalog:syntax-error
-    (lindalog:parse-pred-decl (as-cst '(defpred rd :rd ())))))
+    (lindalog:parse-pred-decl (as-cst '(defpred rd () (:store :rd))))))
 
 (test parse-pred-decl-rejects-nil-store
   (signals lindalog:syntax-error
-    (lindalog:parse-pred-decl (as-cst '(defpred foo nil ())))))
+    (lindalog:parse-pred-decl (as-cst '(defpred foo () (:store nil))))))
 
 (test parse-pred-decl-rejects-nil-unknown-store
   (signals lindalog:syntax-error
-    (lindalog:parse-pred-decl (as-cst '(defpred foo :bar ())))))
+    (lindalog:parse-pred-decl (as-cst '(defpred foo () (:store :bar))))))
 
 (test parse-pred-decl-rejects-nil-non-keyword-store
   (signals lindalog:syntax-error
-    (lindalog:parse-pred-decl (as-cst '(defpred foo rd ())))))
+    (lindalog:parse-pred-decl (as-cst '(defpred foo () (:store rd))))))
 
 (test parse-pred-decl-rejects-non-list-arguments
   (signals lindalog:syntax-error
-    (lindalog:parse-pred-decl (as-cst '(defpred foo :rd bar)))))
+    (lindalog:parse-pred-decl (as-cst '(defpred foo bar (:store :rd))))))
 
 (test parse-pred-decl-rejects-dotted-arguments
   (signals lindalog:syntax-error
-    (lindalog:parse-pred-decl (as-cst '(defpred foo :rd (bar . baz))))))
+    (lindalog:parse-pred-decl (as-cst '(defpred foo (bar . baz) (:store :rd))))))
 
 (test parse-pred-decl-rejects-non-symbol-argument
   (signals lindalog:syntax-error
-    (lindalog:parse-pred-decl (as-cst '(defpred foo :rd (bar 2))))))
+    (lindalog:parse-pred-decl (as-cst '(defpred foo (bar 2) (:store :rd))))))
 
 (test parse-pred-decl-rejects-variable-argument
   (signals lindalog:syntax-error
-    (lindalog:parse-pred-decl (as-cst '(defpred foo :rd (?bar))))))
+    (lindalog:parse-pred-decl (as-cst '(defpred foo (?bar) (:store :rd))))))
 
 (test parse-pred-decl-rejects-keyword-argument
   (signals lindalog:syntax-error
-    (lindalog:parse-pred-decl (as-cst '(defpred foo :rd (:bar))))))
+    (lindalog:parse-pred-decl (as-cst '(defpred foo (:bar) (:store :rd))))))
 
 (test parse-pred-decl-rejects-reserved-argument
   (signals lindalog:syntax-error
-    (lindalog:parse-pred-decl (as-cst '(defpred foo :rd (bar rd))))))
+    (lindalog:parse-pred-decl (as-cst '(defpred foo (bar rd) (:store :rd))))))
 
 (test parse-pred-decl-shape-error-carries-form
-  (let ((input (as-cst '(defpred foo :rd))))
+  (let ((input (as-cst '(defpred foo (:store :rd)))))
     (handler-case
         (progn (lindalog:parse-pred-decl input)
                (fail "no error signaled"))
@@ -408,8 +408,8 @@
         (is (eq input (lindalog:source-error-cst e)))))))
 
 (test parse-pred-decl-argument-error-carries-argument
-  (let* ((input (as-cst '(defpred foo :rd (bar 2))))
-         (arg (cst:second (cst:fourth input))))
+  (let* ((input (as-cst '(defpred foo (bar 2) (:store :rd))))
+         (arg (cst:second (cst:third input))))
     (handler-case
         (progn (lindalog:parse-pred-decl input)
                (fail "no error signaled"))
@@ -417,7 +417,7 @@
         (is (eq arg (lindalog:source-error-cst e)))))))
 
 (test parse-pred-decl-error-message-names-culprit
-  (let ((form '(defpred foo :bar (x y))))
+  (let ((form '(defpred foo (x y) (:store :bar))))
     (handler-case
         (progn (lindalog:parse-pred-decl (as-cst form)) nil)
       (lindalog:syntax-error (e)
@@ -754,8 +754,8 @@
 
 (test parse-toplevel-parses-defpred
   (is (lindalog:ast-equal-p
-       (lindalog:make-pred-decl 'p :in '(a b))
-       (lindalog:parse-toplevel (as-cst '(defpred p :in (a b)))))))
+       (lindalog:make-pred-decl 'p '(a b) :in)
+       (lindalog:parse-toplevel (as-cst '(defpred p (a b) (:store :in)))))))
 
 (test parse-toplevel-parses-deffact
   (is (lindalog:ast-equal-p
