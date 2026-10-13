@@ -133,19 +133,23 @@ malformed or marked :RD."
 CSTs for each clause. Raise a SYNTAX-ERROR for any clauses headed by
 something not in KEYWORDS."
   (reduce (lambda (clauses clause-cst)
-            (let* ((clause (cst:raw clause-cst))
-                   (keyword (first clause)))
-              (unless (member keyword keywords)
+            (let ((clause (cst:raw clause-cst)))
+              (unless (and clause (listp clause))
                 (error 'syntax-error
-                       :cst (cst:first clause-cst)
-                       :message (format nil "unknown clause: ~s"
-                                        keyword)))
-              (when (assoc keyword clauses)
-                (error 'syntax-error
-                       :cst (cst:first clause-cst)
-                       :message (format nil "duplicate clause: ~s"
-                                        keyword)))
-              (acons keyword clause-cst clauses)))
+                       :cst clause-cst
+                       :message "clause must be a proper list headed by a keyword"))
+              (let ((keyword (first clause)))
+                (unless (member keyword keywords)
+                  (error 'syntax-error
+                         :cst (cst:first clause-cst)
+                         :message (format nil "unknown clause: ~s"
+                                          keyword)))
+                (when (assoc keyword clauses)
+                  (error 'syntax-error
+                         :cst (cst:first clause-cst)
+                         :message (format nil "duplicate clause: ~s"
+                                          keyword)))
+                (acons keyword clause-cst clauses))))
           clauses-cst
           :initial-value nil))
 
