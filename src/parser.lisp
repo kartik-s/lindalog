@@ -128,6 +128,27 @@ malformed or marked :RD."
                 :message ":rd can only be used in premises"))
         (t (parse-atom cst))))
 
+(defun collect-clauses (clauses-cst keywords)
+  "Collect the clauses headed by KEYWORDS from CLAUSES-CST, a list of
+CSTs for each clause. Raise a SYNTAX-ERROR for any clauses headed by
+something not in KEYWORDS."
+  (reduce (lambda (clauses clause-cst)
+            (let* ((clause (cst:raw clause-cst))
+                   (keyword (first clause)))
+              (unless (member keyword keywords)
+                (error 'syntax-error
+                       :cst (cst:first clause-cst)
+                       :message (format nil "unknown clause: ~s"
+                                        keyword)))
+              (when (assoc keyword clauses)
+                (error 'syntax-error
+                       :cst (cst:first clause-cst)
+                       :message (format nil "duplicate clause: ~s"
+                                        keyword)))
+              (acons keyword clause-cst clauses)))
+          clauses-cst
+          :initial-value nil))
+
 (defun parse-pred-decl (cst)
   "Parse CST into a PRED-DECL AST node, signaling SYNTAX-ERROR if CST
 is malformed."
@@ -205,73 +226,56 @@ is malformed."
 (defun parse-rule (cst)
   "Parse CST into a RULE AST node, signaling SYNTAX-ERROR if CST is
 malformed."
-  (flet ((collect-clauses (clauses-cst)
-           (reduce (lambda (clauses clause-cst)
-                     (let ((clause (cst:raw clause-cst))
-                           (keyword (first clause)))
-                       (unless (member keyword '(:doc :when :then))
-                         (error 'syntax-error
-                                :cst (cst:first clause-cst)
-                                :message (format nil "unknown clause: ~s"
-                                                 keyword)))
-                       (when (assoc keyword clauses)
-                         (error 'syntax-error
-                                :cst (cst:first clause-cst)
-                                :message (format nil "duplicate clause: ~s"
-                                                 keyword)))
-                       (acons keyword clause-cst clauses)))
-                   clauses-cst
-                   :initial-value nil)))
-    (let ((parts (and (cst:proper-list-p cst)
-                      (cst:listify cst))))
-      (if (not (member (length parts) '(4 5)))
-          (error 'syntax-error
-                 :cst cst
-                 :message "rule must be of the form (defrule <name> (:doc <string>)? (:when <atom>+) (:then <atom>*))")
-          (let* ((name-cst (second parts))
-                 (name (cst:raw name-cst)))
-            (cond ((null name)
-                   (error 'syntax-error
-                          :cst name-cst
-                          :message "rule name is NIL"))
-                  ((or (not (symbolp name))
-                       (variable-symbol-p name)
-                       (keywordp name))
-                   (error 'syntax-error
-                          :cst name-cst
-                          :message "rule name cannot be a variable, a keyword, or a non-symbol"))
-                  ((reserved-name-p name)
-                   (error 'syntax-error
-                          :cst name-cst 
-                          :message (format nil "rule name is reserved: ~s" name)))
-                  (t (let* ((clause-csts (collect-clauses (cddr parts)))
-                            (doc-cst (cdr (assoc :doc clause-csts)))
-                            (when-cst (cdr (assoc :when clause-csts)))
-                            (then-cst (cdr (assoc :then clause-csts))))
-                       (cond ((and doc-cst
-                                   (or (not (cst:rest doc-cst))
-                                       (not (stringp (cst:raw (cst:second doc-cst))))))
-                              (error 'syntax-error
-                                     :cst doc-cst
-                                     :message ":doc clause of rule must be of the form (:doc <string>)"))
-                             ((not when-cst)
-                              (error 'syntax-error
-                                     :cst when-cst
-                                     :message ":when clause of rule must be of the form (:when <atom>+)"))
-                             ((not (cst:rest when-cst))
-                              (error 'syntax-error
-                                     :cst when-cst
-                                     :message ":when clause has no premises"))
-                             ((not then-cst)
-                              (error 'syntax-error
-                                     :cst then-cst
-                                     :message ":then clause of rule must be of the form (:then <atom>*)"))
-                             (t (make-rule
-                                 name
-                                 (mapcar #'parse-premise (rest (cst:listify when-cst)))
-                                 (mapcar #'parse-conclusion (rest (cst:listify then-cst)))
-                                 :docstring (and doc-cst (cst:raw (cst:second doc-cst)))
-                                 :cst cst)))))))))))
+  (let ((parts (and (cst:proper-list-p cst)
+                    (cst:listify cst))))
+    (if (not (member (length parts) '(4 5)))
+        (error 'syntax-error
+               :cst cst
+               :message "rule must be of the form (defrule <name> (:doc <string>)? (:when <atom>+) (:then <atom>*))")
+        (let* ((name-cst (second parts))
+               (name (cst:raw name-cst)))
+          (cond ((null name)
+                 (error 'syntax-error
+                        :cst name-cst
+                        :message "rule name is NIL"))
+                ((or (not (symbolp name))
+                     (variable-symbol-p name)
+                     (keywordp name))
+                 (error 'syntax-error
+                        :cst name-cst
+                        :message "rule name cannot be a variable, a keyword, or a non-symbol"))
+                ((reserved-name-p name)
+                 (error 'syntax-error
+                        :cst name-cst 
+                        :message (format nil "rule name is reserved: ~s" name)))
+                (t (let* ((clause-csts (collect-clauses (cddr parts) '(:doc :when :then)))
+                          (doc-cst (cdr (assoc :doc clause-csts)))
+                          (when-cst (cdr (assoc :when clause-csts)))
+                          (then-cst (cdr (assoc :then clause-csts))))
+                     (cond ((and doc-cst
+                                 (or (not (cst:rest doc-cst))
+                                     (not (stringp (cst:raw (cst:second doc-cst))))))
+                            (error 'syntax-error
+                                   :cst doc-cst
+                                   :message ":doc clause of rule must be of the form (:doc <string>)"))
+                           ((not when-cst)
+                            (error 'syntax-error
+                                   :cst when-cst
+                                   :message ":when clause of rule must be of the form (:when <atom>+)"))
+                           ((not (cst:rest when-cst))
+                            (error 'syntax-error
+                                   :cst when-cst
+                                   :message ":when clause has no premises"))
+                           ((not then-cst)
+                            (error 'syntax-error
+                                   :cst then-cst
+                                   :message ":then clause of rule must be of the form (:then <atom>*)"))
+                           (t (make-rule
+                               name
+                               (mapcar #'parse-premise (rest (cst:listify when-cst)))
+                               (mapcar #'parse-conclusion (rest (cst:listify then-cst)))
+                               :docstring (and doc-cst (cst:raw (cst:second doc-cst)))
+                               :cst cst))))))))))
 
 (defun parse-toplevel (cst)
   "Parse CST into one of a PRED-DECL, INIT-FACT, or RULE AST node,
