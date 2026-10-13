@@ -228,18 +228,26 @@ is malformed."
 is malformed."
   (let ((parts (and (cst:proper-list-p cst)
                     (cst:listify cst))))
-    (if (/= 2 (length parts))
+    (if (not (member (length parts) '(2 3)))
         (error 'syntax-error
                :cst cst
-               :message "deffact must be of the form (deffact <atom>)")
+               :message "deffact must be of the form (deffact <atom> (:doc <string>)?)")
         (let* ((atom (parse-atom (second parts)))
-               (vars (atom-variables atom)))
-          (if (null vars)
-              (make-init-fact atom :cst cst)
+               (vars (atom-variables atom))
+               (clauses (collect-clauses (cddr parts) '(:doc)))
+               (doc-cst (cdr (assoc :doc clauses))))
+          (if (and doc-cst
+                   (or (not (= 2 (length (cst:raw doc-cst))))
+                       (not (stringp (cst:raw (cst:second doc-cst))))))
               (error 'syntax-error
-                     :cst (ast-node-cst (first vars))
-                     :message (format nil "fact atom contains a variable and is therefore not ground: ~s"
-                                      (variable-name (first vars)))))))))
+                     :cst doc-cst
+                     :message ":doc clause must be of the form (:doc <string>)")
+              (if (null vars)
+                  (make-init-fact atom :cst cst)
+                  (error 'syntax-error
+                         :cst (ast-node-cst (first vars))
+                         :message (format nil "fact atom contains a variable and is therefore not ground: ~s"
+                                          (variable-name (first vars))))))))))
 
 (defun parse-rule (cst)
   "Parse CST into a RULE AST node, signaling SYNTAX-ERROR if CST is
