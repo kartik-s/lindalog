@@ -128,30 +128,42 @@ malformed or marked :RD."
                 :message ":rd can only be used in premises"))
         (t (parse-atom cst))))
 
-(defun collect-clauses (clauses-cst keywords)
+(defun collect-clauses (clauses-cst &key (required nil) (optional nil))
   "Collect the clauses headed by KEYWORDS from CLAUSES-CST, a list of
 CSTs for each clause. Raise a SYNTAX-ERROR for any clauses headed by
 something not in KEYWORDS."
-  (reduce (lambda (clauses clause-cst)
-            (let ((clause (cst:raw clause-cst)))
-              (unless (and clause (listp clause))
-                (error 'syntax-error
-                       :cst clause-cst
-                       :message "clause must be a proper list headed by a keyword"))
-              (let ((keyword (first clause)))
-                (unless (member keyword keywords)
-                  (error 'syntax-error
-                         :cst (cst:first clause-cst)
-                         :message (format nil "unknown clause: ~s"
-                                          keyword)))
-                (when (assoc keyword clauses)
-                  (error 'syntax-error
-                         :cst (cst:first clause-cst)
-                         :message (format nil "duplicate clause: ~s"
-                                          keyword)))
-                (acons keyword clause-cst clauses))))
-          clauses-cst
-          :initial-value nil))
+  (let* ((keywords (append required optional))
+         (clauses
+           (reduce (lambda (clauses clause-cst)
+                     (let ((clause (cst:raw clause-cst)))
+                       (if (or (null clause)
+                               (not (alexandria:proper-list-p clause)))
+                           (error 'syntax-error
+                                  :cst clause-cst
+                                  :message "clause must be a proper list headed by a keyword")
+                           (let ((keyword (first clause)))
+                             (cond ((not (member keyword keywords))
+                                    (error 'syntax-error
+                                           :cst (cst:first clause-cst)
+                                           :message (format nil "unknown clause: ~s"
+                                                            keyword)))
+                                   ((assoc keyword clauses)
+                                    (error 'syntax-error
+                                           :cst (cst:first clause-cst)
+                                           :message (format nil "duplicate clause: ~s"
+                                                            keyword)))
+                                   (t (acons keyword clause-cst clauses)))))))
+                   clauses-cst
+                   :initial-value nil))
+         (missing (remove-if (lambda (keyword)
+                               (assoc keyword clauses))
+                             required)))
+    (if missing
+        (error 'syntax-error
+               :cst clauses-cst
+               :message (format nil "missing required ~{~s~^, ~} clause~p"
+                                missing (length missing)))
+        clauses)))
 
 (defun parse-pred-decl (cst)
   "Parse CST into a PRED-DECL AST node, signaling SYNTAX-ERROR if CST
@@ -183,7 +195,9 @@ is malformed."
                  (error 'syntax-error
                         :cst args-cst
                         :message "predicate arguments must be a proper list"))
-                (t (let* ((clauses (collect-clauses (cdddr parts) '(:store :doc)))
+                (t (let* ((clauses (collect-clauses (cdddr parts)
+                                                    :required '(:store)
+                                                    :optional '(:doc)))
                           (store-cst (cdr (assoc :store clauses)))
                           (doc-cst (cdr (assoc :doc clauses))))
                      (cond ((not (= 2 (length (cst:raw store-cst))))
@@ -234,7 +248,8 @@ is malformed."
                :message "deffact must be of the form (deffact <atom> (:doc <string>)?)")
         (let* ((atom (parse-atom (second parts)))
                (vars (atom-variables atom))
-               (clauses (collect-clauses (cddr parts) '(:doc)))
+               (clauses (collect-clauses (cddr parts)
+                                         :optional '(:doc)))
                (doc-cst (cdr (assoc :doc clauses))))
           (if (and doc-cst
                    (or (not (= 2 (length (cst:raw doc-cst))))
@@ -274,7 +289,9 @@ malformed."
                  (error 'syntax-error
                         :cst name-cst 
                         :message (format nil "rule name is reserved: ~s" name)))
-                (t (let* ((clause-csts (collect-clauses (cddr parts) '(:doc :when :then)))
+                (t (let* ((clause-csts (collect-clauses (cddr parts)
+                                                        :required '(:when :then)
+                                                        :optional '(:doc)))
                           (doc-cst (cdr (assoc :doc clause-csts)))
                           (when-cst (cdr (assoc :when clause-csts)))
                           (then-cst (cdr (assoc :then clause-csts))))
