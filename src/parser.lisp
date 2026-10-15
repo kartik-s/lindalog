@@ -305,7 +305,7 @@ malformed."
                             (error 'syntax-error
                                    :cst when-cst
                                    :message ":when clause of rule must be of the form (:when <atom>+)"))
-                           ((not (cst:rest when-cst))
+                           ((cst:null (cst:rest when-cst))
                             (error 'syntax-error
                                    :cst when-cst
                                    :message ":when clause has no premises"))

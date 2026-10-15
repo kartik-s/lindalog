@@ -570,6 +570,15 @@
                                      (:when (p a))
                                      (:then)))))))
 
+(test parse-rule-clauses-in-any-order
+  (is (lindalog:ast-equal-p
+       (lindalog:parse-rule (as-cst '(defrule foo
+                                      (:when (p a))
+                                      (:then (q a)))))
+       (lindalog:parse-rule (as-cst '(defrule foo
+                                      (:then (q a))
+                                      (:when (p a))))))))
+
 (test parse-rule-with-docstring
   (let ((a (lindalog:make-rule
             'foo
@@ -598,7 +607,7 @@
                                          (:then (q a)))))))
     (is (lindalog:ast-equal-p a b))))
 
-(test parse-rule-with-duplicate-clause
+(test parse-rule-rejects-duplicate-clause
   (signals lindalog:syntax-error
     (lindalog:parse-rule (as-cst '(defrule foo
                                    (:when (p a))
@@ -641,67 +650,48 @@
 
 (test parse-rule-rejects-missing-when
   (signals lindalog:syntax-error
-    (lindalog:parse-rule (as-cst '(defrule rd
+    (lindalog:parse-rule (as-cst '(defrule foo
                                   (:then (q a)))))))
 
 (test parse-rule-rejects-missing-then
   (signals lindalog:syntax-error
-    (lindalog:parse-rule (as-cst '(defrule rd
-                                  (:when (p a)))))))
-
-(test parse-rule-rejects-clauses-out-of-order
-  (signals lindalog:syntax-error
-    (lindalog:parse-rule (as-cst '(defrule rd
-                                  (:then (q a))
+    (lindalog:parse-rule (as-cst '(defrule foo
                                   (:when (p a)))))))
 
 (test parse-rule-rejects-mispelled-clause
   (signals lindalog:syntax-error
-    (lindalog:parse-rule (as-cst '(defrule rd
+    (lindalog:parse-rule (as-cst '(defrule foo
                                   (:when (p a))
                                   (:the (q a)))))))
 
-(test parse-rule-rejects-mispelled-clause
-  (signals lindalog:syntax-error
-    (lindalog:parse-rule (as-cst '(defrule rd
-                                  (:when (p a))
-                                  (:the (q a)))))))
 
 (test parse-rule-rejects-non-keyword-clause
   (signals lindalog:syntax-error
-    (lindalog:parse-rule (as-cst '(defrule rd
+    (lindalog:parse-rule (as-cst '(defrule foo
                                   (when (p a))
-                                  (:then (q a))
-                                  (:when (p b)))))))
-
-(test parse-rule-rejects-misplaced-docstring
-  (signals lindalog:syntax-error
-    (lindalog:parse-rule (as-cst '(defrule rd
-                                  (:when (p a))
-                                  (:then (q a))
-                                  "Consume (p a) and produce (q a).")))))
+                                  (:then (q a)))))))
 
 (test parse-rule-rejects-empty-when
   (signals lindalog:syntax-error
-    (lindalog:parse-rule (as-cst '(defrule rd
+    (lindalog:parse-rule (as-cst '(defrule foo
                                   (:when)
                                   (:then (q a)))))))
 
 (test parse-rule-rejects-dotted-clause
   (signals lindalog:syntax-error
-    (lindalog:parse-rule (as-cst '(defrule rd
+    (lindalog:parse-rule (as-cst '(defrule foo
                                   (:when . (p a))
                                   (:then (q a)))))))
 
 (test parse-rule-rejects-malformed-premise
   (signals lindalog:syntax-error
-    (lindalog:parse-rule (as-cst '(defrule rd
+    (lindalog:parse-rule (as-cst '(defrule foo
                                   (:when ((p a) :rd))
                                   (:then (q a)))))))
 
 (test parse-rule-rejects-rd-conclusion
   (signals lindalog:syntax-error
-    (lindalog:parse-rule (as-cst '(defrule rd
+    (lindalog:parse-rule (as-cst '(defrule foo
                                   (:when (p a))
                                   (:then (:rd (q a))))))))
 
