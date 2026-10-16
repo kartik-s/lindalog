@@ -403,6 +403,14 @@
   (signals lindalog:syntax-error
     (lindalog:parse-pred-decl (as-cst '(defpred foo (bar rd) (:store :rd))))))
 
+(test parse-pred-decl-rejects-extra-store
+  (signals lindalog:syntax-error
+    (lindalog:parse-pred-decl (as-cst '(defpred p (a b) (:store :rd :in))))))
+
+(test parse-pred-decl-rejects-extra-docstring
+  (signals lindalog:syntax-error
+    (lindalog:parse-pred-decl (as-cst '(defpred p (a b) (:store :rd) (:doc "foo" 3))))))
+
 (test parse-pred-decl-missing-args-carries-form
   (let ((input (as-cst '(defpred foo (:store :rd)))))
     (handler-case
@@ -457,6 +465,16 @@
                                      (lindalog:make-constant 3))))
        (lindalog:parse-init-fact (as-cst '(deffact (p a 3)))))))
 
+(test parse-init-fact-with-docstring
+  (let ((a (lindalog:parse-init-fact (as-cst '(deffact (p a 3) (:doc "foo")))))
+        (b (lindalog:make-init-fact
+            (lindalog:make-atom 'p (list (lindalog:make-constant 'a)
+                                         (lindalog:make-constant 3)))
+            :docstring "foo")))
+    (is (lindalog:ast-equal-p a b))
+    (is (string= (lindalog:init-fact-docstring a)
+                 (lindalog:init-fact-docstring b)))))
+
 (test parse-init-fact-matches-parse-atom
   (let ((atom '(p a b)))
     (is (lindalog:ast-equal-p
@@ -491,6 +509,10 @@
 (test parse-init-fact-rejects-rd-marker
   (signals lindalog:syntax-error
     (lindalog:parse-init-fact (as-cst '(deffact (:rd (p a)))))))
+
+(test parse-init-fact-rejects-extra-docstring
+  (signals lindalog:syntax-error
+    (lindalog:parse-init-fact (as-cst '(deffact (p a) (:doc "foo" 3))))))
 
 (test parse-init-fact-shape-error-carries-form
   (let ((input (as-cst '(deffact . p))))
@@ -706,6 +728,13 @@
     (lindalog:parse-rule (as-cst '(defrule foo
                                   (:when (p a))
                                   (:then (:rd (q a))))))))
+
+(test parse-rule-rejects-extra-docstring
+  (signals lindalog:syntax-error
+    (lindalog:parse-rule (as-cst '(defrule foo
+                                   (:when (p a))
+                                   (:then (q a))
+                                   (:doc "foo" 3))))))
 
 (test parse-rule-error-carries-name
   (let* ((input (as-cst '(defrule ?foo (:when (p a)) (:then q a))))

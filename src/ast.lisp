@@ -40,7 +40,7 @@
 
 (defstruct (pred-decl
             (:include ast-node)
-            (:constructor make-pred-decl (name args store &key cst docstring)))
+            (:constructor make-pred-decl (name args store &key docstring cst)))
   (name nil :type symbol
             :read-only t)
   (args nil :type list
@@ -52,7 +52,7 @@
 
 (defstruct (init-fact
             (:include ast-node)
-            (:constructor make-init-fact (atom &key cst)))
+            (:constructor make-init-fact (atom &key docstring cst)))
   (atom nil :type atom
             :read-only t)
   (docstring nil :type (or null string)

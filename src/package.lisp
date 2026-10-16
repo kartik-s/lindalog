@@ -27,12 +27,14 @@
    #:make-pred-decl
    #:pred-decl-p
    #:pred-decl-name
-   #:pred-decl-store
    #:pred-decl-args
+   #:pred-decl-store
+   #:pred-decl-docstring
 
    #:make-init-fact
    #:init-fact-p
    #:init-fact-atom
+   #:init-fact-docstring
 
    #:make-rule
    #:rule-p
