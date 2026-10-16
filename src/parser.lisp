@@ -183,7 +183,7 @@ missing required clauses, or at the CST for an unknown clause."
     (if missing
         (error 'syntax-error
                :cst cst
-               :message (format nil "missing required clause~p: ~{~a~^ ~}"
+               :message (format nil "missing required clause~p: ~{~a~^, ~}"
                                 (length missing)
                                 (mapcar #'clause-spec-template missing)))
         clauses)))
