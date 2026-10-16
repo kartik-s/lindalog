@@ -14,10 +14,12 @@
   (:report (lambda (condition stream)
              (let* ((cst (source-error-cst condition))
                     (range (and cst (cst:source cst))))
-               (format stream "[~d-~d]: ~a"
-                       (car range)
-                       (cdr range)
-                       (source-error-message condition))))))
+               (when range
+                 (format stream "[~d-~d]: "
+                         (car range)
+                         (cdr range)))
+               (write-string (source-error-message condition)
+                             stream)))))
 
 (define-condition syntax-error (source-error)
   ())
