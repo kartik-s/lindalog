@@ -307,10 +307,10 @@
        (lindalog:make-pred-decl 'foo '(bar) :in)
        (lindalog:parse-pred-decl (as-cst '(defpred foo (bar) (:store :in)))))))
 
-(test parse-pred-decl-with-sub-store
+(test parse-pred-decl-with-sig-store
   (is (lindalog:ast-equal-p
-       (lindalog:make-pred-decl 'foo '(bar) :sub)
-       (lindalog:parse-pred-decl (as-cst '(defpred foo (bar) (:store :sub)))))))
+       (lindalog:make-pred-decl 'foo '(bar) :sig)
+       (lindalog:parse-pred-decl (as-cst '(defpred foo (bar) (:store :sig)))))))
 
 (test parse-pred-decl-with-arguments
   (is (lindalog:ast-equal-p

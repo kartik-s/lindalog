@@ -11,8 +11,8 @@ followed by at least one more character."
        (equal (char (symbol-name x) 0)
               #\?)))
 
-(defparameter *reserved-names* '(defrule defpred deffact rd in sub))
-(defparameter *reserved-keywords* '(:rd :in :sub))
+(defparameter *reserved-names* '(defrule defpred deffact rd in sig))
+(defparameter *reserved-keywords* '(:rd :in :sig))
 
 (defun reserved-name-p (name)
   "Check if the symbol NAME is a reserved symbol."
@@ -204,11 +204,11 @@ is malformed."
                      (cond ((not (= 2 (length (cst:raw store-cst))))
                             (error 'syntax-error
                                    :cst store-cst
-                                   :message ":store clause must be of the form (:store {:rd|:in|:sub}"))
-                           ((not (member (cst:raw (cst:second store-cst)) '(:rd :in :sub)))
+                                   :message ":store clause must be of the form (:store {:rd|:in|:sig}"))
+                           ((not (member (cst:raw (cst:second store-cst)) '(:rd :in :sig)))
                             (error 'syntax-error
                                    :cst (cst:second store-cst)
-                                   :message (format nil "expected :rd, :in, or :sub for predicate store, got: ~s"
+                                   :message (format nil "expected :rd, :in, or :sig for predicate store, got: ~s"
                                                     (cst:raw store-cst))))
                            ((and doc-cst
                                  (or (not (= 2 (length (cst:raw doc-cst))))

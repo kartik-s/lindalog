@@ -24,7 +24,7 @@
   (in-store (make-hash-table)
    :type hash-table
    :read-only t)
-  (sub-store (make-hash-table)
+  (sig-store (make-hash-table)
    :type hash-table
    :read-only t)
   (next-id 0
@@ -36,7 +36,7 @@
         (store (ecase sc
                  (:rd (database-rd-store database))
                  (:in (database-in-store database))
-                 (:sub (database-sub-store database))))
+                 (:sig (database-sig-store database))))
         (fact (make-fact (incf (database-next-id database))
                          atom)))
     (if (eq :in sc)

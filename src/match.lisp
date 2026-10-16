@@ -126,7 +126,7 @@ satisfies ACCEPT-P, or return +MATCH-FAIL+ if none exists."
              (table (case sc
                       (:rd (database-rd-store database))
                       (:in (database-in-store database))
-                      (:sub (database-sub-store database))
+                      (:sig (database-sig-store database))
                       (otherwise (return-from match-premises +match-fail+)))))
         (dolist (fact (gethash pred table) (return +match-fail+))
           (unless (and (eq :in sc)

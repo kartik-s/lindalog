@@ -385,10 +385,10 @@
                 :key #'lindalog::fact-atom
                 :test #'lindalog:ast-equal-p))))
 
-(test match-premises-sub-premise-records-read-fact
+(test match-premises-sig-premise-records-read-fact
   (let* ((a (lindalog:make-atom 'p (list (lindalog:make-constant 'a))))
          (database (make-test-database
-                   '((p . :sub))
+                   '((p . :sig))
                    (list a)))
          (premise (lindalog:make-premise
                    (lindalog:make-atom 'p (list (lindalog:make-variable 'x)))
