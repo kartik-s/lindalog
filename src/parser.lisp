@@ -226,12 +226,12 @@ is malformed."
                      (cond ((not (= 2 (length (cst:raw store-cst))))
                             (error 'syntax-error
                                    :cst store-cst
-                                   :message ":store clause must be of the form (:store {:rd|:in|:sig}"))
+                                   :message ":store clause must be of the form (:store {:rd|:in|:sig})"))
                            ((not (member (cst:raw (cst:second store-cst)) '(:rd :in :sig)))
                             (error 'syntax-error
                                    :cst (cst:second store-cst)
                                    :message (format nil "expected :rd, :in, or :sig for predicate store, got: ~s"
-                                                    (cst:raw store-cst))))
+                                                    (cst:raw (cst:second store-cst)))))
                            ((and doc-cst
                                  (or (not (= 2 (length (cst:raw doc-cst))))
                                      (not (stringp (cst:raw (cst:second doc-cst))))))
@@ -258,6 +258,7 @@ is malformed."
                                               (t (push arg parsed-args)))
                                     :finally (return (make-pred-decl name (nreverse parsed-args)
                                                                      (cst:raw (cst:second store-cst))
+                                                                     :docstring (when doc-cst (cst:raw (cst:second doc-cst)))
                                                                      :cst cst))))))))))))
 
 (defun parse-init-fact (cst)

@@ -327,6 +327,16 @@
        (lindalog:make-pred-decl 'foo '(a b c) :rd)
        (lindalog:parse-pred-decl (as-cst '(defpred foo (a b c) (:store :rd)))))))
 
+(test parse-pred-decl-with-docstring
+  (let ((a (lindalog:make-pred-decl
+            'p '(a b) :rd
+            :docstring "foo"))
+        (b (lindalog:parse-pred-decl
+            (as-cst '(defpred p (a b) (:store :rd) (:doc "foo"))))))
+    (is (lindalog:ast-equal-p a b))
+    (is (string= (lindalog:pred-decl-docstring a)
+                 (lindalog:pred-decl-docstring b)))))
+
 (test parse-pred-decl-rejects-duplicate-argument-names
   (signals lindalog:syntax-error
     (lindalog:parse-pred-decl (as-cst '(defpred foo (a a) (:store :rd))))))
