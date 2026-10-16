@@ -128,10 +128,10 @@ malformed or marked :RD."
                 :message ":rd can only be used in premises"))
         (t (parse-atom cst))))
 
-(defun collect-clauses (clauses-cst &key (required nil) (optional nil))
+(defun collect-clauses (cst clauses-cst &key (required nil) (optional nil))
   "Collect the clauses headed by KEYWORDS from CLAUSES-CST, a list of
-CSTs for each clause. Raise a SYNTAX-ERROR for any clauses headed by
-something not in KEYWORDS."
+CSTs for each clause. Raise a SYNTAX-ERROR pointing at CST for any
+clauses headed by something not in KEYWORDS."
   (let* ((keywords (append required optional))
          (clauses
            (reduce (lambda (clauses clause-cst)
@@ -160,7 +160,7 @@ something not in KEYWORDS."
                              required)))
     (if missing
         (error 'syntax-error
-               :cst clauses-cst
+               :cst cst
                :message (format nil "missing required ~{~s~^, ~} clause~p"
                                 missing (length missing)))
         clauses)))
@@ -195,7 +195,8 @@ is malformed."
                  (error 'syntax-error
                         :cst args-cst
                         :message "predicate arguments must be a proper list"))
-                (t (let* ((clauses (collect-clauses (cdddr parts)
+                (t (let* ((clauses (collect-clauses cst
+                                                    (cdddr parts)
                                                     :required '(:store)
                                                     :optional '(:doc)))
                           (store-cst (cdr (assoc :store clauses)))
@@ -248,7 +249,8 @@ is malformed."
                :message "deffact must be of the form (deffact <atom> (:doc <string>)?)")
         (let* ((atom (parse-atom (second parts)))
                (vars (atom-variables atom))
-               (clauses (collect-clauses (cddr parts)
+               (clauses (collect-clauses cst
+                                         (cddr parts)
                                          :optional '(:doc)))
                (doc-cst (cdr (assoc :doc clauses))))
           (if (and doc-cst
@@ -289,7 +291,8 @@ malformed."
                  (error 'syntax-error
                         :cst name-cst 
                         :message (format nil "rule name is reserved: ~s" name)))
-                (t (let* ((clause-csts (collect-clauses (cddr parts)
+                (t (let* ((clause-csts (collect-clauses cst
+                                                        (cddr parts)
                                                         :required '(:when :then)
                                                         :optional '(:doc)))
                           (doc-cst (cdr (assoc :doc clause-csts)))

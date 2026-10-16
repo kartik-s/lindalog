@@ -335,9 +335,13 @@
   (signals lindalog:syntax-error
     (lindalog:parse-pred-decl (as-cst '(defpred foo . :rd)))))
 
-(test parse-pred-decl-rejects-missing-parts
+(test parse-pred-decl-rejects-missing-args
   (signals lindalog:syntax-error
     (lindalog:parse-pred-decl (as-cst '(defpred foo (:store :rd))))))
+
+(test parse-pred-decl-rejects-missing-store
+  (signals lindalog:syntax-error
+    (lindalog:parse-pred-decl (as-cst '(defpred foo (a b))))))
 
 (test parse-pred-decl-rejects-extra-parts
   (signals lindalog:syntax-error
@@ -399,8 +403,16 @@
   (signals lindalog:syntax-error
     (lindalog:parse-pred-decl (as-cst '(defpred foo (bar rd) (:store :rd))))))
 
-(test parse-pred-decl-shape-error-carries-form
+(test parse-pred-decl-missing-args-carries-form
   (let ((input (as-cst '(defpred foo (:store :rd)))))
+    (handler-case
+        (progn (lindalog:parse-pred-decl input)
+               (fail "no error signaled"))
+      (lindalog:syntax-error (e)
+        (is (eq input (lindalog:source-error-cst e)))))))
+
+(test parse-pred-decl-missing-store-carries-form
+  (let ((input (as-cst '(defpred foo (a b)))))
     (handler-case
         (progn (lindalog:parse-pred-decl input)
                (fail "no error signaled"))
@@ -416,7 +428,7 @@
       (lindalog:syntax-error (e)
         (is (eq arg (lindalog:source-error-cst e)))))))
 
-(test parse-pred-decl-error-message-names-culprit
+(test parse-pred-decl-bad-store-error-message-names-culprit
   (let ((form '(defpred foo (x y) (:store :bar))))
     (handler-case
         (progn (lindalog:parse-pred-decl (as-cst form)) nil)
