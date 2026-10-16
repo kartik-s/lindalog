@@ -166,8 +166,9 @@ missing required clauses, or at the CST for an unknown clause."
                              (cond ((not (find keyword clause-specs :key #'clause-spec-keyword))
                                     (error 'syntax-error
                                            :cst (cst:first clause-cst)
-                                           :message (format nil "unknown clause: ~s"
-                                                            keyword)))
+                                           :message (format nil "unknown clause ~s, expected one of: ~{~a~^, ~}"
+                                                            keyword
+                                                            (mapcar #'clause-spec-template clause-specs))))
                                    ((assoc keyword clauses)
                                     (error 'syntax-error
                                            :cst (cst:first clause-cst)
