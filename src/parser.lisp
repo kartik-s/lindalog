@@ -29,7 +29,7 @@ followed by at least one more character."
        (equal (char (symbol-name x) 0)
               #\?)))
 
-(defparameter *reserved-names* '(defrule defpred deffact rd in sig))
+(defparameter *reserved-names* '(defrule defpred deffact rd in sig nil))
 (defparameter *reserved-keywords* '(:rd :in :sig))
 
 (defun reserved-name-p (name)

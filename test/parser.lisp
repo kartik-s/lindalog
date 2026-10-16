@@ -367,6 +367,10 @@
   (signals lindalog:syntax-error
     (lindalog:parse-pred-decl (as-cst '(defpred rd () (:store :rd))))))
 
+(test parse-pred-decl-rejects-nil-arg
+  (signals lindalog:syntax-error
+    (lindalog:parse-pred-decl (as-cst '(defpred foo (nil) (:store :rd))))))
+
 (test parse-pred-decl-rejects-nil-store
   (signals lindalog:syntax-error
     (lindalog:parse-pred-decl (as-cst '(defpred foo () (:store nil))))))
