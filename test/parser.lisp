@@ -752,6 +752,24 @@
       (lindalog:syntax-error (e)
         (is (eq rd (lindalog:source-error-cst e)))))))
 
+(test parse-rule-missing-clause-error-message-contains-singular
+  (let* ((input (as-cst '(defrule foo (:when (p a))))))
+    (handler-case
+        (progn (lindalog:parse-rule input)
+               (fail "no error signaled"))
+      (lindalog:syntax-error (e)
+        (let ((msg (princ-to-string e)))
+          (is (and (search "clause" msg)
+                   (not (search "clauses" msg)))))))))
+
+(test parse-rule-missing-clauses-error-message-contains-plural
+  (let* ((input (as-cst '(defrule foo))))
+    (handler-case
+        (progn (lindalog:parse-rule input)
+               (fail "no error signaled"))
+      (lindalog:syntax-error (e)
+        (is (search "clauses" (princ-to-string e)))))))
+
 ;;; PARSE-TOPLEVEL
 
 (test parse-toplevel-parses-defpred

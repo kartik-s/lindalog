@@ -2,6 +2,24 @@
 
 (in-package #:lindalog)
 
+(defstruct (clause-spec
+            (:constructor clause-spec (keyword template &key required-p)))
+  (keyword nil :type keyword :read-only t)
+  (template nil :type string :read-only t)
+  (required-p nil :type boolean :read-only t))
+
+(defparameter *pred-decl-clauses*
+  (list (clause-spec :store "(:store {:rd|:in|:sig})" :required-p t)
+        (clause-spec :doc "(:doc <string>)")))
+
+(defparameter *init-fact-clauses*
+  (list (clause-spec :doc "(:doc <string>)")))
+
+(defparameter *rule-clauses*
+  (list (clause-spec :when "(:when <atom>+)" :required-p t)
+        (clause-spec :then "(:then <atom>*)" :required-p t)
+        (clause-spec :doc "(:doc <string>)")))
+
 (defun variable-symbol-p (x)
   "Check if X is a non-keyword symbol whose name is a question mark
 followed by at least one more character."
@@ -128,11 +146,14 @@ malformed or marked :RD."
                 :message ":rd can only be used in premises"))
         (t (parse-atom cst))))
 
-(defun collect-clauses (cst clauses-cst &key (required nil) (optional nil))
-  "Collect the clauses headed by KEYWORDS from CLAUSES-CST, a list of
-CSTs for each clause. Raise a SYNTAX-ERROR pointing at CST for any
-clauses headed by something not in KEYWORDS."
-  (let* ((keywords (append required optional))
+(defun collect-clauses (cst clauses-cst clause-specs)
+  "Collect the clauses specified by CLAUSE-SPECS from CLAUSES-CST, a list
+of CSTs for each clause. Raise a SYNTAX-ERROR pointing at CST for any
+missing required clauses, or at the CST for an unknown clause."
+  (let* ((required-specs
+           (remove-if-not (lambda (spec)
+                            (clause-spec-required-p spec))
+                          clause-specs))
          (clauses
            (reduce (lambda (clauses clause-cst)
                      (let ((clause (cst:raw clause-cst)))
@@ -142,7 +163,7 @@ clauses headed by something not in KEYWORDS."
                                   :cst clause-cst
                                   :message "clause must be a proper list headed by a keyword")
                            (let ((keyword (first clause)))
-                             (cond ((not (member keyword keywords))
+                             (cond ((not (find keyword clause-specs :key #'clause-spec-keyword))
                                     (error 'syntax-error
                                            :cst (cst:first clause-cst)
                                            :message (format nil "unknown clause: ~s"
@@ -155,173 +176,163 @@ clauses headed by something not in KEYWORDS."
                                    (t (acons keyword clause-cst clauses)))))))
                    clauses-cst
                    :initial-value nil))
-         (missing (remove-if (lambda (keyword)
-                               (assoc keyword clauses))
-                             required)))
+         (missing (remove-if (lambda (spec)
+                               (assoc (clause-spec-keyword spec) clauses))
+                             required-specs)))
     (if missing
         (error 'syntax-error
                :cst cst
-               :message (format nil "missing required ~{~s~^, ~} clause~p"
-                                missing (length missing)))
+               :message (format nil "missing required clause~p: ~{~a~^ ~}"
+                                (length missing)
+                                (mapcar #'clause-spec-template missing)))
         clauses)))
 
 (defun parse-pred-decl (cst)
   "Parse CST into a PRED-DECL AST node, signaling SYNTAX-ERROR if CST
 is malformed."
-  (let ((parts (and (cst:proper-list-p cst)
-                    (cst:listify cst))))
-    (if (not (member (length parts) '(4 5)))
-        (error 'syntax-error
-               :cst cst
-               :message "predicate declaration must be of the form (defpred <name> (<arg-name>*) (:store {:rd|:in:out}) (:doc <string>)?)")
-        (let* ((name-cst (second parts))
-               (name (cst:raw name-cst))
-               (args-cst (third parts)))
-          (cond ((cst:null name-cst)
-                 (error 'syntax-error
-                        :cst name-cst
-                        :message "predicate name is NIL"))
-                ((or (not (symbolp name))
-                     (variable-symbol-p name)
-                     (keywordp name))
-                 (error 'syntax-error
-                        :cst name-cst
-                        :message "predicate name cannot be a variable, a keyword, or a non-symbol"))
-                ((reserved-name-p name)
-                 (error 'syntax-error
-                        :cst name-cst
-                        :message (format nil "predicate name is reserved: ~s" name)))
-                ((not (cst:proper-list-p args-cst))
-                 (error 'syntax-error
-                        :cst args-cst
-                        :message "predicate arguments must be a proper list"))
-                (t (let* ((clauses (collect-clauses cst
-                                                    (cdddr parts)
-                                                    :required '(:store)
-                                                    :optional '(:doc)))
-                          (store-cst (cdr (assoc :store clauses)))
-                          (doc-cst (cdr (assoc :doc clauses))))
-                     (cond ((not (= 2 (length (cst:raw store-cst))))
-                            (error 'syntax-error
-                                   :cst store-cst
-                                   :message ":store clause must be of the form (:store {:rd|:in|:sig}"))
-                           ((not (member (cst:raw (cst:second store-cst)) '(:rd :in :sig)))
-                            (error 'syntax-error
-                                   :cst (cst:second store-cst)
-                                   :message (format nil "expected :rd, :in, or :sig for predicate store, got: ~s"
-                                                    (cst:raw store-cst))))
-                           ((and doc-cst
-                                 (or (not (= 2 (length (cst:raw doc-cst))))
-                                     (not (stringp (cst:raw (cst:second doc-cst))))))
-                            (error 'syntax-error
-                                   :cst doc-cst
-                                   :message ":doc clause must be of the form (:doc <string>)"))
-                           (t (loop :with parsed-args := nil
-                                    :for arg-cst :in (cst:listify args-cst)
-                                    :for arg := (cst:raw arg-cst)
-                                    :do (cond ((or (not (symbolp arg))
-                                                   (variable-symbol-p arg)
-                                                   (keywordp arg))
-                                               (error 'syntax-error
-                                                      :cst arg-cst
-                                                      :message "predicate argument cannot be a variable, a keyword, or a non-symbol"))
-                                              ((reserved-name-p arg)
-                                               (error 'syntax-error
-                                                      :cst arg-cst
-                                                      :message (format nil "predicate argument is reserved: ~s" arg)))
-                                              ((member arg parsed-args :test #'string=)
-                                               (error 'syntax-error
-                                                      :cst arg-cst
-                                                      :message (format nil "duplicate predicate argument: ~s" arg)))
-                                              (t (push arg parsed-args)))
-                                    :finally (return (make-pred-decl name (nreverse parsed-args)
-                                                                     (cst:raw (cst:second store-cst))
-                                                                     :cst cst))))))))))))
+  (let* ((parts (if (cst:proper-list-p cst)
+                    (cst:listify cst)
+                    (error 'syntax-error
+                           :cst cst
+                           :message "predicate is not a proper list")))
+         (name-cst (second parts))
+         (name (cst:raw name-cst))
+         (args-cst (third parts)))
+    (cond ((cst:null name-cst)
+           (error 'syntax-error
+                  :cst name-cst
+                  :message "predicate name is NIL"))
+          ((or (not (symbolp name))
+               (variable-symbol-p name)
+               (keywordp name))
+           (error 'syntax-error
+                  :cst name-cst
+                  :message "predicate name cannot be a variable, a keyword, or a non-symbol"))
+          ((reserved-name-p name)
+           (error 'syntax-error
+                  :cst name-cst
+                  :message (format nil "predicate name is reserved: ~s" name)))
+          ((not (cst:proper-list-p args-cst))
+           (error 'syntax-error
+                  :cst args-cst
+                  :message "predicate arguments must be a proper list"))
+          (t (let* ((clauses (collect-clauses cst (cdddr parts) *pred-decl-clauses*))
+                    (store-cst (cdr (assoc :store clauses)))
+                    (doc-cst (cdr (assoc :doc clauses))))
+               (cond ((not (= 2 (length (cst:raw store-cst))))
+                      (error 'syntax-error
+                             :cst store-cst
+                             :message ":store clause must be of the form (:store {:rd|:in|:sig}"))
+                     ((not (member (cst:raw (cst:second store-cst)) '(:rd :in :sig)))
+                      (error 'syntax-error
+                             :cst (cst:second store-cst)
+                             :message (format nil "expected :rd, :in, or :sig for predicate store, got: ~s"
+                                              (cst:raw store-cst))))
+                     ((and doc-cst
+                           (or (not (= 2 (length (cst:raw doc-cst))))
+                               (not (stringp (cst:raw (cst:second doc-cst))))))
+                      (error 'syntax-error
+                             :cst doc-cst
+                             :message ":doc clause must be of the form (:doc <string>)"))
+                     (t (loop :with parsed-args := nil
+                              :for arg-cst :in (cst:listify args-cst)
+                              :for arg := (cst:raw arg-cst)
+                              :do (cond ((or (not (symbolp arg))
+                                             (variable-symbol-p arg)
+                                             (keywordp arg))
+                                         (error 'syntax-error
+                                                :cst arg-cst
+                                                :message "predicate argument cannot be a variable, a keyword, or a non-symbol"))
+                                        ((reserved-name-p arg)
+                                         (error 'syntax-error
+                                                :cst arg-cst
+                                                :message (format nil "predicate argument is reserved: ~s" arg)))
+                                        ((member arg parsed-args :test #'string=)
+                                         (error 'syntax-error
+                                                :cst arg-cst
+                                                :message (format nil "duplicate predicate argument: ~s" arg)))
+                                        (t (push arg parsed-args)))
+                              :finally (return (make-pred-decl name (nreverse parsed-args)
+                                                               (cst:raw (cst:second store-cst))
+                                                               :cst cst))))))))))
 
 (defun parse-init-fact (cst)
   "Parse CST into an INIT-FACT AST node, signaling SYNTAX-ERROR if CST
 is malformed."
-  (let ((parts (and (cst:proper-list-p cst)
-                    (cst:listify cst))))
-    (if (not (member (length parts) '(2 3)))
+  (let* ((parts (if (cst:proper-list-p cst)
+                    (cst:listify cst)
+                    (error 'syntax-error
+                           :cst cst
+                           :message "fact is not a proper list")))
+         (atom (parse-atom (second parts)))
+         (vars (atom-variables atom))
+         (clauses (collect-clauses cst (cddr parts) *init-fact-clauses*))
+         (doc-cst (cdr (assoc :doc clauses))))
+    (if (and doc-cst
+             (or (not (= 2 (length (cst:raw doc-cst))))
+                 (not (stringp (cst:raw (cst:second doc-cst))))))
         (error 'syntax-error
-               :cst cst
-               :message "deffact must be of the form (deffact <atom> (:doc <string>)?)")
-        (let* ((atom (parse-atom (second parts)))
-               (vars (atom-variables atom))
-               (clauses (collect-clauses cst
-                                         (cddr parts)
-                                         :optional '(:doc)))
-               (doc-cst (cdr (assoc :doc clauses))))
-          (if (and doc-cst
-                   (or (not (= 2 (length (cst:raw doc-cst))))
-                       (not (stringp (cst:raw (cst:second doc-cst))))))
-              (error 'syntax-error
-                     :cst doc-cst
-                     :message ":doc clause must be of the form (:doc <string>)")
-              (if (null vars)
-                  (make-init-fact atom :cst cst)
-                  (error 'syntax-error
-                         :cst (ast-node-cst (first vars))
-                         :message (format nil "fact atom contains a variable and is therefore not ground: ~s"
-                                          (variable-name (first vars))))))))))
+               :cst doc-cst
+               :message ":doc clause must be of the form (:doc <string>)")
+        (if (null vars)
+            (make-init-fact atom :cst cst)
+            (error 'syntax-error
+                   :cst (ast-node-cst (first vars))
+                   :message (format nil "fact atom contains a variable and is therefore not ground: ~s"
+                                    (variable-name (first vars))))))))
 
 (defun parse-rule (cst)
   "Parse CST into a RULE AST node, signaling SYNTAX-ERROR if CST is
 malformed."
-  (let ((parts (and (cst:proper-list-p cst)
-                    (cst:listify cst))))
-    (if (not (member (length parts) '(4 5)))
-        (error 'syntax-error
-               :cst cst
-               :message "rule must be of the form (defrule <name> (:doc <string>)? (:when <atom>+) (:then <atom>*))")
-        (let* ((name-cst (second parts))
-               (name (cst:raw name-cst)))
-          (cond ((null name)
-                 (error 'syntax-error
-                        :cst name-cst
-                        :message "rule name is NIL"))
-                ((or (not (symbolp name))
-                     (variable-symbol-p name)
-                     (keywordp name))
-                 (error 'syntax-error
-                        :cst name-cst
-                        :message "rule name cannot be a variable, a keyword, or a non-symbol"))
-                ((reserved-name-p name)
-                 (error 'syntax-error
-                        :cst name-cst 
-                        :message (format nil "rule name is reserved: ~s" name)))
-                (t (let* ((clause-csts (collect-clauses cst
-                                                        (cddr parts)
-                                                        :required '(:when :then)
-                                                        :optional '(:doc)))
-                          (doc-cst (cdr (assoc :doc clause-csts)))
-                          (when-cst (cdr (assoc :when clause-csts)))
-                          (then-cst (cdr (assoc :then clause-csts))))
-                     (cond ((and doc-cst
-                                 (or (not (cst:rest doc-cst))
-                                     (not (stringp (cst:raw (cst:second doc-cst))))))
-                            (error 'syntax-error
-                                   :cst doc-cst
-                                   :message ":doc clause of rule must be of the form (:doc <string>)"))
-                           ((not when-cst)
-                            (error 'syntax-error
-                                   :cst when-cst
-                                   :message ":when clause of rule must be of the form (:when <atom>+)"))
-                           ((cst:null (cst:rest when-cst))
-                            (error 'syntax-error
-                                   :cst when-cst
-                                   :message ":when clause has no premises"))
-                           ((not then-cst)
-                            (error 'syntax-error
-                                   :cst then-cst
-                                   :message ":then clause of rule must be of the form (:then <atom>*)"))
-                           (t (make-rule
-                               name
-                               (mapcar #'parse-premise (rest (cst:listify when-cst)))
-                               (mapcar #'parse-conclusion (rest (cst:listify then-cst)))
-                               :docstring (and doc-cst (cst:raw (cst:second doc-cst)))
-                               :cst cst))))))))))
+  (let* ((parts (if (cst:proper-list-p cst)
+                    (cst:listify cst)
+                    (error 'syntax-error
+                           :cst cst
+                           :message "rule is not a propert list")))
+         (name-cst (second parts))
+         (name (cst:raw name-cst)))
+    (cond ((null name)
+           (error 'syntax-error
+                  :cst name-cst
+                  :message "rule name is NIL"))
+          ((or (not (symbolp name))
+               (variable-symbol-p name)
+               (keywordp name))
+           (error 'syntax-error
+                  :cst name-cst
+                  :message "rule name cannot be a variable, a keyword, or a non-symbol"))
+          ((reserved-name-p name)
+           (error 'syntax-error
+                  :cst name-cst
+                  :message (format nil "rule name is reserved: ~s" name)))
+          (t (let* ((clause-csts (collect-clauses cst (cddr parts) *rule-clauses*))
+                    (doc-cst (cdr (assoc :doc clause-csts)))
+                    (when-cst (cdr (assoc :when clause-csts)))
+                    (then-cst (cdr (assoc :then clause-csts))))
+               (cond ((and doc-cst
+                           (or (not (cst:rest doc-cst))
+                               (not (stringp (cst:raw (cst:second doc-cst))))))
+                      (error 'syntax-error
+                             :cst doc-cst
+                             :message ":doc clause of rule must be of the form (:doc <string>)"))
+                     ((not when-cst)
+                      (error 'syntax-error
+                             :cst when-cst
+                             :message ":when clause of rule must be of the form (:when <atom>+)"))
+                     ((cst:null (cst:rest when-cst))
+                      (error 'syntax-error
+                             :cst when-cst
+                             :message ":when clause has no premises"))
+                     ((not then-cst)
+                      (error 'syntax-error
+                             :cst then-cst
+                             :message ":then clause of rule must be of the form (:then <atom>*)"))
+                     (t (make-rule
+                         name
+                         (mapcar #'parse-premise (rest (cst:listify when-cst)))
+                         (mapcar #'parse-conclusion (rest (cst:listify then-cst)))
+                         :docstring (and doc-cst (cst:raw (cst:second doc-cst)))
+                         :cst cst))))))))
 
 (defun parse-toplevel (cst)
   "Parse CST into one of a PRED-DECL, INIT-FACT, or RULE AST node,
