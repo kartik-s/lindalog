@@ -382,3 +382,39 @@ signaling SYNTAX-ERROR if CST is malformed."
                                   :cst head-cst
                                   :message (format nil "unknown toplevel form: ~s; expected defpred, deffact, or defrule"
                                                    head))))))))))
+
+(defpackage #:lindalog-user)
+
+(defun read-program (stream)
+  "Read a program from STREAM into a list of toplevel CSTs."
+  (let ((*package* (find-package '#:lindalog-user))
+        (*read-eval* nil))
+    (handler-case
+        (loop :for cst := (eclector.concrete-syntax-tree:read stream nil stream)
+              :until (eq stream cst)
+              :collect cst)
+      ((or eclector.base:stream-position-reader-error eclector.base:end-of-file) (e)
+        (error 'read-error
+               :range (let ((begin (+ (eclector.base:stream-position e)
+                                      (eclector.base:position-offset e))))
+                        (cons begin (+ begin (eclector.base:range-length e))))
+               :message (princ-to-string e))))))
+
+(defun parse-program (csts)
+  "Parse a program from a list of toplevel CSTs into a PROGRAM struct."
+  (loop :for cst :in csts
+        :for form := (handler-case
+                         (parse-toplevel cst)
+                       (syntax-error (e) e))
+        :if (pred-decl-p form)
+          :collect form :into predicates
+          :else :if (init-fact-p form)
+                  :collect form :into facts
+                  :else :if (rule-p form)
+                          :collect form :into rules
+                          :else :if (typep form 'syntax-error)
+                                  :collect form :into errors
+        :finally (if errors
+                     (error 'program-syntax-errors
+                            :errors errors)
+                     (return (make-program predicates rules facts)))))

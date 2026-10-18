@@ -70,6 +70,16 @@
   (rhs nil :type list
            :read-only t))
 
+(defstruct (program
+            (:include ast-node)
+            (:constructor make-program (predicates facts rules)))
+  (predicates nil :type list
+                  :read-only t)
+  (facts nil :type list
+             :read-only t)
+  (rules nil :type list
+             :read-only t))
+
 (defgeneric ast-equal-p (a b)
   (:documentation "Check if two AST nodes are equivalent.")
   (:method (a b)
