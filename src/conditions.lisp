@@ -34,7 +34,7 @@
         :reader analysis-error-cst)))
 
 (defmethod source-error-range ((condition analysis-error))
-  (let ((cst (source-error-cst condition)))
+  (let ((cst (analysis-error-cst condition)))
     (and cst (cst:source cst))))
 
 (define-condition syntax-error (analysis-error)

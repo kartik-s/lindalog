@@ -49,12 +49,25 @@
    #:add-fact
 
    #:lindalog-error
+
    #:source-error
+   #:source-error-message
+   #:source-error-range
+
+   #:read-error
+   #:read-error-range
+
+   #:analysis-error
+   #:analysis-error-cst
+
    #:syntax-error
    #:validation-error
 
-   #:source-error-cst
-   #:source-error-message
+   #:invalid-program
+   #:invalid-program-errors
+
+   #:program-syntax-errors
+   #:program-semantic-errors
 
    #:parse-term
    #:parse-atom
