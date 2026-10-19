@@ -18,7 +18,8 @@
      (:file "parser")
      (:file "state")
      (:file "match")
-     (:file "lindalog")))))
+     (:file "lindalog"))))
+  :in-order-to ((asdf:test-op (asdf:test-op "lindalog/tests"))))
 
 (asdf:defsystem #:lindalog/tests
   :description "Tests for Lindalog"
@@ -33,4 +34,8 @@
     ((:file "package")
      (:file "ast")
      (:file "match")
-     (:file "parser")))))
+     (:file "parser"))))
+  :perform (asdf:test-op (op c)
+                         (declare (ignore op c))
+                         (unless (uiop:symbol-call :fiveam '#:run-all-tests)
+                           (error "Lindalog test suite failed"))))
