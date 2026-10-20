@@ -1042,3 +1042,130 @@
   (signals lindalog:read-error
     (with-input-from-string (stream "#1=(a . #1#)")
       (lindalog:read-program stream))))
+
+;;; PARSE-PROGRAM
+
+(test parse-program-no-forms
+  (is (lindalog:ast-equal-p
+       (lindalog:make-program '() '() '())
+       (lindalog:parse-program '()))))
+
+(test parse-program-one-form-each
+  (is (lindalog:ast-equal-p
+       (lindalog:make-program
+        (list (lindalog:parse-pred-decl (as-cst '(defpred p (a b) (:store :in)))))
+        (list (lindalog:parse-init-fact (as-cst '(deffact (p 2 a)))))
+        (list (lindalog:parse-rule (as-cst '(defrule foo (:when (p ?x ?y)) (:then (p ?y ?x)))))))
+       (with-input-from-string (stream "
+(defpred p (a b)
+  (:store :in))
+
+(deffact (p 2 a))
+
+(defrule foo
+  (:when (p ?x ?y))
+  (:then (p ?y ?x)))
+")
+         (lindalog:parse-program
+          (lindalog:read-program stream))))))
+
+(test parse-program-interleaved-forms
+  (is (lindalog:ast-equal-p
+       (lindalog:make-program
+        (list (lindalog:parse-pred-decl (as-cst '(defpred p (a b) (:store :in))))
+              (lindalog:parse-pred-decl (as-cst '(defpred q (x) (:store :rd)))))
+        (list (lindalog:parse-init-fact (as-cst '(deffact (p 2 a)))))
+        (list (lindalog:parse-rule (as-cst '(defrule foo (:when (p ?x ?y)) (:then (p ?y ?x)))))
+              (lindalog:parse-rule (as-cst '(defrule bar (:when (q ?x)) (:then (p ?x ?x)))))))
+       (with-input-from-string (stream "
+(defpred p (a b)
+  (:store :in))
+
+(defrule foo
+  (:when (p ?x ?y))
+  (:then (p ?y ?x)))
+
+(deffact (p 2 a))
+
+(defrule bar
+  (:when (q ?x))
+  (:then (p ?x ?x)))
+
+(defpred q (x)
+  (:store :rd))
+")
+         (lindalog:parse-program
+          (lindalog:read-program stream))))))
+
+(test parse-program-rejects-one-syntax-error
+  (handler-case
+      (progn
+        (with-input-from-string (stream "
+(defpred p (a b)
+  (:store :foo))")
+          (lindalog:parse-program
+           (lindalog:read-program stream)))
+        (fail "expected a PROGRAM-SYNTAX-ERRORS"))
+    (lindalog:program-syntax-errors (e)
+      (is (= 1 (length (lindalog:invalid-program-errors e))))
+      (let ((syntax-error (first (lindalog:invalid-program-errors e))))
+        (is (typep syntax-error 'lindalog:syntax-error))
+        (is (equal '(28 . 32) (lindalog:source-error-range syntax-error)))
+        (is (search ":FOO" (princ-to-string syntax-error)))))))
+
+(test parse-program-rejects-multiple-syntax-errors
+  (handler-case
+      (progn
+        (with-input-from-string (stream "
+(defpred p (a b)
+  (:store :foo))
+
+(defpred q (x)
+  (:store :in))
+
+(deffact (p 1 2))
+(deffact (p rd 3))
+
+(defrule foo
+  (:then (q ?x)))
+
+(defrule bar
+  (:when (q ?x))
+  (:then (p ?x ?x)))")
+          (lindalog:parse-program
+           (lindalog:read-program stream)))
+        (fail "expected a PROGRAM-SYNTAX-ERRORS"))
+    (lindalog:program-syntax-errors (e)
+      (let ((errors (lindalog:invalid-program-errors e)))
+        (is (= 3 (length errors)))
+        (is (every (lambda (e)
+                     (typep e 'lindalog:syntax-error))
+                   errors))
+        (is (equal '(28 . 32) (lindalog:source-error-range (first errors))))
+        (is (equal '(98 . 100) (lindalog:source-error-range (second errors))))
+        (is (equal '(106 . 136) (lindalog:source-error-range (third errors))))
+        (is (search ":FOO" (princ-to-string (first errors))))
+        (is (search "RD" (princ-to-string (second errors))))
+        (is (search ":when" (princ-to-string (third errors))))
+        (is (search ":FOO" (princ-to-string e)))
+        (is (search "RD" (princ-to-string e)))
+        (is (search ":when" (princ-to-string e)))))))
+
+(test parse-program-rejects-bad-cst-from-expression
+  (handler-case
+      (progn
+        (lindalog:parse-program (list (as-cst '(defpred p (rd b)
+                                                (:store :in)))))
+        (fail "expected a PROGRAM-SYNTAX-ERRORS"))
+    (lindalog:program-syntax-errors (e)
+      (let ((errors (lindalog:invalid-program-errors e)))
+        (is (= 1 (length errors)))
+        (is (typep (first errors) 'lindalog:syntax-error))
+        (is (equal nil (lindalog:source-error-range (first errors))))
+        (is (string= "predicate argument is reserved: RD" (princ-to-string (first errors))))))))
+
+(test parse-program-rejects-reader-error
+  (signals lindalog:read-error
+    (with-input-from-string (stream "(defpred p (a b) (:store :in)")
+      (lindalog:parse-program
+       (lindalog:read-program stream)))))
