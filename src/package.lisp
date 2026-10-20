@@ -43,6 +43,12 @@
    #:rule-lhs
    #:rule-rhs
 
+   #:make-program
+   #:program-p
+   #:program-predicates
+   #:program-facts
+   #:program-rules
+
    #:ast-equal-p
 
    #:make-database

@@ -143,3 +143,20 @@ the same quantity."
        (multiset-equal-p (rule-rhs a)
                          (rule-rhs b)
                          :test #'ast-equal-p)))
+
+(defmethod ast-equal-p ((a program) (b program))
+  (and (and (= (length (program-predicates a))
+               (length (program-predicates b)))
+            (every #'ast-equal-p
+                   (program-predicates a)
+                   (program-predicates b)))
+       (and (= (length (program-facts a))
+               (length (program-facts b)))
+            (every #'ast-equal-p
+                   (program-facts a)
+                   (program-facts b)))
+       (and (= (length (program-rules a))
+               (length (program-rules b)))
+            (every #'ast-equal-p
+                   (program-rules a)
+                   (program-rules b)))))
