@@ -383,12 +383,37 @@ signaling SYNTAX-ERROR if CST is malformed."
                                   :message (format nil "unknown toplevel form: ~s; expected defpred, deffact, or defrule"
                                                    head))))))))))
 
-(defpackage #:lindalog-user)
+(defclass lindalog-client (eclector.concrete-syntax-tree:cst-client)
+  ())
+
+(defmethod eclector.reader:interpret-symbol-token ((client lindalog-client) stream token marker-1 marker-2)
+  (declare (ignore marker-2))
+  (case marker-1
+    ((nil 0) (call-next-method))
+    (otherwise
+     (let ((end (file-position stream)))
+       (error 'read-error
+              :range (cons (- end (length token))
+                           end)
+              :message (format nil "package syntax not allowed: ~a" token))))))
+
+(defmethod eclector.reader:note-labeled-object ((client lindalog-client) stream label parent)
+  (declare (ignore parent))
+  (let ((end (file-position stream)))
+    (error 'lindalog:read-error
+           :range (cons (- end (length (format nil "~d" label)))
+                        end)
+           :message (format nil "labels not allowed: #~d=" label))))
+
+(defpackage #:lindalog-user
+  (:use))
 
 (defun read-program (stream)
-  "Read a program from STREAM into a list of toplevel CSTs."
+  "Read a program from STREAM into a list of toplevel CSTs, signaling
+READ-ERROR if the program is malformed."
   (let ((*package* (find-package '#:lindalog-user))
-        (*read-eval* nil))
+        (*read-eval* nil)
+        (eclector.reader:*client* (make-instance 'lindalog-client)))
     (handler-case
         (loop :for cst := (eclector.concrete-syntax-tree:read stream nil stream)
               :until (eq stream cst)

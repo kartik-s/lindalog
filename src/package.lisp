@@ -77,4 +77,7 @@
    #:parse-init-fact
    #:parse-rule
    #:parse-toplevel
+   #:parse-program
+
+   #:read-program
    ))
