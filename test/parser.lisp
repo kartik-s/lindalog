@@ -43,6 +43,10 @@
   (signals lindalog:syntax-error
     (lindalog:parse-term (as-cst '?))))
 
+(test parse-term-rejects-reserved-name
+  (signals lindalog:syntax-error
+    (lindalog:parse-term (as-cst 'rd))))
+
 (test parse-term-rejects-nil
   (signals lindalog:syntax-error
     (lindalog:parse-term (as-cst nil))))
