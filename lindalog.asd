@@ -15,6 +15,7 @@
     ((:file "package")
      (:file "ast")
      (:file "conditions")
+     (:file "reader")
      (:file "parser")
      (:file "state")
      (:file "match")
