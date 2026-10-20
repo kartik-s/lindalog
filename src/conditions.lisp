@@ -45,8 +45,11 @@
 
 (define-condition invalid-program (lindalog-error)
   ((errors :initarg :errors
-            :initform nil
-            :reader invalid-program-errors)))
+           :initform nil
+           :reader invalid-program-errors))
+  (:report (lambda (condition stream)
+             (format stream "~{~a~^~%~}"
+                     (invalid-program-errors condition)))))
 
 (define-condition program-syntax-errors (invalid-program) ())
 (define-condition program-semantic-errors (invalid-program) ())
