@@ -427,7 +427,8 @@ READ-ERROR if the program is malformed."
                :message (princ-to-string e))))))
 
 (defun parse-program (csts)
-  "Parse a program from a list of toplevel CSTs into a PROGRAM struct."
+  "Parse a program from a list of toplevel CSTs into a PROGRAM struct,
+signaling PROGRAM-SYNTAX-ERRORS if program is malformed."
   (loop :for cst :in csts
         :for form := (handler-case
                          (parse-toplevel cst)
@@ -443,4 +444,4 @@ READ-ERROR if the program is malformed."
         :finally (if errors
                      (error 'program-syntax-errors
                             :errors errors)
-                     (return (make-program predicates rules facts)))))
+                     (return (make-program predicates facts rules)))))
