@@ -112,7 +112,9 @@
 (defmethod ast-equal-p ((a pred-decl) (b pred-decl))
   (and (string= (pred-decl-name a) (pred-decl-name b))
        (eq (pred-decl-store a) (pred-decl-store b))
-       (every #'eq
+       (= (length (pred-decl-args a))
+          (length (pred-decl-args b)))
+       (every #'string=
               (pred-decl-args a)
               (pred-decl-args b))))
 
