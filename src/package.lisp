@@ -63,11 +63,11 @@
    #:read-error
    #:read-error-range
 
-   #:analysis-error
-   #:analysis-error-cst
-
    #:syntax-error
-   #:validation-error
+   #:syntax-error-cst
+
+   #:semantic-error
+   #:semantic-error-ast
 
    #:invalid-program
    #:invalid-program-errors

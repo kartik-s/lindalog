@@ -28,20 +28,21 @@
 (defmethod source-error-range ((condition read-error))
   (read-error-range condition))
 
-(define-condition analysis-error (source-error)
+(define-condition syntax-error (source-error)
   ((cst :initarg :cst
         :initform nil
-        :reader analysis-error-cst)))
+        :reader syntax-error-cst)))
 
-(defmethod source-error-range ((condition analysis-error))
-  (let ((cst (analysis-error-cst condition)))
-    (and cst (cst:source cst))))
+(defmethod source-error-range ((condition syntax-error))
+  (cst:source (syntax-error-cst condition)))
 
-(define-condition syntax-error (analysis-error)
-  ())
+(define-condition semantic-error (source-error)
+  ((ast :initarg :ast
+        :initform nil
+        :reader semantic-error-ast)))
 
-(define-condition validation-error (analysis-error)
-  ())
+(defmethod source-error-range ((condition semantic-error))
+  (cst:source (ast-node-cst (semantic-error-ast condition))))
 
 (define-condition invalid-program (lindalog-error)
   ((errors :initarg :errors
