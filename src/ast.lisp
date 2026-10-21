@@ -72,11 +72,11 @@
 
 (defstruct (program
             (:include ast-node)
-            (:constructor make-program (predicates facts rules)))
-  (predicates nil :type list
+            (:constructor make-program (pred-decls init-facts rules)))
+  (pred-decls nil :type list
                   :read-only t)
-  (facts nil :type list
-             :read-only t)
+  (init-facts nil :type list
+                  :read-only t)
   (rules nil :type list
              :read-only t))
 
@@ -145,16 +145,16 @@ the same quantity."
                          :test #'ast-equal-p)))
 
 (defmethod ast-equal-p ((a program) (b program))
-  (and (and (= (length (program-predicates a))
-               (length (program-predicates b)))
+  (and (and (= (length (program-pred-decls a))
+               (length (program-pred-decls b)))
             (every #'ast-equal-p
-                   (program-predicates a)
-                   (program-predicates b)))
-       (and (= (length (program-facts a))
-               (length (program-facts b)))
+                   (program-pred-decls a)
+                   (program-pred-decls b)))
+       (and (= (length (program-init-facts a))
+               (length (program-init-facts b)))
             (every #'ast-equal-p
-                   (program-facts a)
-                   (program-facts b)))
+                   (program-init-facts a)
+                   (program-init-facts b)))
        (and (= (length (program-rules a))
                (length (program-rules b)))
             (every #'ast-equal-p
