@@ -14,6 +14,9 @@
    #:variable-p
    #:variable-name
 
+   #:make-pred-ref
+   #:pred-ref-name
+
    #:make-atom
    #:atom-p
    #:atom-predicate

@@ -21,29 +21,33 @@
 
 (test atom-with-predicate-and-arguments
   (let ((a (lindalog:make-atom
-            'at
+            (lindalog:make-pred-ref 'at)
             (list (lindalog:make-constant 'player)
                   (lindalog:make-constant 'gate)))))
     (is (lindalog:atom-p a))
-    (is (eq 'at (lindalog:atom-predicate a)))
+    (is (lindalog:ast-equal-p (lindalog:make-pred-ref 'at)
+                              (lindalog:atom-predicate a)))
     (is (eq 'player (lindalog:constant-value (first (lindalog:atom-args a)))))
     (is (eq 'gate (lindalog:constant-value (second (lindalog:atom-args a)))))))
 
 (test premise-with-atom-and-rd-p
   (let* ((a (lindalog:make-atom
-             'at
+             (lindalog:make-pred-ref 'at)
              (list (lindalog:make-constant 'player)
                    (lindalog:make-constant 'gate))))
          (p (lindalog:make-premise a t)))
     (is (lindalog:atom-p (lindalog:premise-atom p)))
-    (is (eq 'at (lindalog:atom-predicate (lindalog:premise-atom p))))
+    (is (lindalog:ast-equal-p (lindalog:make-pred-ref 'at)
+                              (lindalog:atom-predicate (lindalog:premise-atom p))))
     (is (eq 'player (lindalog:constant-value (first (lindalog:atom-args (lindalog:premise-atom p))))))
     (is (eq 'gate (lindalog:constant-value (second (lindalog:atom-args (lindalog:premise-atom p))))))
     (is (lindalog:premise-rd-p p))))
 
 (test ast-equal-p-same-first-argument-and-different-length
   (is (not (lindalog:ast-equal-p
-            (lindalog:make-atom 'p (list (lindalog:make-constant 'a)))
-            (lindalog:make-atom 'p (list (lindalog:make-constant 'a)
-                                         (lindalog:make-constant 'b)))))))
+            (lindalog:make-atom (lindalog:make-pred-ref 'p)
+                                (list (lindalog:make-constant 'a)))
+            (lindalog:make-atom (lindalog:make-pred-ref 'p)
+                                (list (lindalog:make-constant 'a)
+                                      (lindalog:make-constant 'b)))))))
 

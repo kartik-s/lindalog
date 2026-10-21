@@ -62,45 +62,57 @@
 ;;; MATCH-ATOM
 
 (test match-atom-equal-ground-atoms-succeeds
-  (let ((a (lindalog:make-atom 'p (list (lindalog:make-constant 'a)
-                                        (lindalog:make-constant 'b))))
-        (b (lindalog:make-atom 'p (list (lindalog:make-constant 'a)
-                                        (lindalog:make-constant 'b)))))
+  (let ((a (lindalog:make-atom (lindalog:make-pred-ref 'p)
+                               (list (lindalog:make-constant 'a)
+                                     (lindalog:make-constant 'b))))
+        (b (lindalog:make-atom (lindalog:make-pred-ref 'p)
+                               (list (lindalog:make-constant 'a)
+                                     (lindalog:make-constant 'b)))))
     (is (eq lindalog::+no-bindings+
             (lindalog::match-atom a b lindalog::+no-bindings+)))))
 
 (test match-atom-different-predicates-fails
-  (let ((a (lindalog:make-atom 'p (list (lindalog:make-constant 'a))))
-        (b (lindalog:make-atom 'q (list (lindalog:make-constant 'a)))))
+  (let ((a (lindalog:make-atom (lindalog:make-pred-ref 'p)
+                               (list (lindalog:make-constant 'a))))
+        (b (lindalog:make-atom (lindalog:make-pred-ref 'q)
+                               (list (lindalog:make-constant 'a)))))
     (is (eq lindalog::+match-fail+
             (lindalog::match-atom a b lindalog::+no-bindings+)))))
 
 (test match-atom-unequal-ground-arguments-fails
-  (let ((a (lindalog:make-atom 'p (list (lindalog:make-constant 'a))))
-        (b (lindalog:make-atom 'p (list (lindalog:make-constant 'b)))))
+  (let ((a (lindalog:make-atom (lindalog:make-pred-ref 'p)
+                               (list (lindalog:make-constant 'a))))
+        (b (lindalog:make-atom (lindalog:make-pred-ref 'p)
+                               (list (lindalog:make-constant 'b)))))
     (is (eq lindalog::+match-fail+
             (lindalog::match-atom a b lindalog::+no-bindings+)))))
 
 (test match-atom-different-arities-fails
-  (let ((a (lindalog:make-atom 'p (list (lindalog:make-constant 'a))))
-        (b (lindalog:make-atom 'p (list (lindalog:make-constant 'a)
-                                        (lindalog:make-constant 'b)))))
+  (let ((a (lindalog:make-atom (lindalog:make-pred-ref 'p)
+                               (list (lindalog:make-constant 'a))))
+        (b (lindalog:make-atom (lindalog:make-pred-ref 'p)
+                               (list (lindalog:make-constant 'a)
+                                     (lindalog:make-constant 'b)))))
     (is (eq lindalog::+match-fail+
             (lindalog::match-atom a b lindalog::+no-bindings+)))))
 
 (test match-atom-unbound-variable-creates-binding
-  (let ((a (lindalog:make-atom 'p (list (lindalog:make-variable 'x))))
-        (b (lindalog:make-atom 'p (list (lindalog:make-constant 'a)))))
+  (let ((a (lindalog:make-atom (lindalog:make-pred-ref 'p)
+                               (list (lindalog:make-variable 'x))))
+        (b (lindalog:make-atom (lindalog:make-pred-ref 'p)
+                               (list (lindalog:make-constant 'a)))))
     (is (lindalog::bindings-equal-p
          (list (cons (lindalog:make-variable 'x)
                      (lindalog:make-constant 'a)))
          (lindalog::match-atom a b lindalog::+no-bindings+)))))
 
 (test match-atom-multiple-variables-create-bindings
-  (let ((a (lindalog:make-atom 'p (list (lindalog:make-variable 'x)
-                                        (lindalog:make-variable 'y))))
-        (b (lindalog:make-atom 'p (list (lindalog:make-constant 'a)
-                                        (lindalog:make-constant 'b)))))
+  (let ((a (lindalog:make-atom (lindalog:make-pred-ref 'p)
+                               (list (lindalog:make-variable 'x)
+                                     (lindalog:make-variable 'y))))
+        (b (lindalog:make-atom (lindalog:make-pred-ref 'p)
+                               (list (lindalog:make-constant 'a)
+                                     (lindalog:make-constant 'b)))))
     (is (lindalog::bindings-equal-p
          (list (cons (lindalog:make-variable 'x)
                      (lindalog:make-constant 'a))
@@ -109,36 +121,44 @@
          (lindalog::match-atom a b lindalog::+no-bindings+)))))
 
 (test match-atom-mixed-constant-and-variable-succeeds
-  (let ((a (lindalog:make-atom 'p (list (lindalog:make-constant 'a)
-                                        (lindalog:make-variable 'x))))
-        (b (lindalog:make-atom 'p (list (lindalog:make-constant 'a)
-                                        (lindalog:make-constant 'b)))))
+  (let ((a (lindalog:make-atom (lindalog:make-pred-ref 'p)
+                               (list (lindalog:make-constant 'a)
+                                     (lindalog:make-variable 'x))))
+        (b (lindalog:make-atom (lindalog:make-pred-ref 'p)
+                               (list (lindalog:make-constant 'a)
+                                     (lindalog:make-constant 'b)))))
     (is (lindalog::bindings-equal-p
          (list (cons (lindalog:make-variable 'x)
                      (lindalog:make-constant 'b)))
          (lindalog::match-atom a b lindalog::+no-bindings+)))))
 
 (test match-atom-repeated-variable-consistent-succeeds
-  (let ((a (lindalog:make-atom 'p (list (lindalog:make-variable 'x)
-                                        (lindalog:make-variable 'x))))
-        (b (lindalog:make-atom 'p (list (lindalog:make-constant 'a)
-                                        (lindalog:make-constant 'a)))))
+  (let ((a (lindalog:make-atom (lindalog:make-pred-ref 'p)
+                               (list (lindalog:make-variable 'x)
+                                     (lindalog:make-variable 'x))))
+        (b (lindalog:make-atom (lindalog:make-pred-ref 'p)
+                               (list (lindalog:make-constant 'a)
+                                     (lindalog:make-constant 'a)))))
     (is (lindalog::bindings-equal-p
          (list (cons (lindalog:make-variable 'x)
                      (lindalog:make-constant 'a)))
          (lindalog::match-atom a b lindalog::+no-bindings+)))))
 
 (test match-atom-repeated-variable-inconsistent-fails
-  (let ((a (lindalog:make-atom 'p (list (lindalog:make-variable 'x)
-                                        (lindalog:make-variable 'x))))
-        (b (lindalog:make-atom 'p (list (lindalog:make-constant 'a)
-                                        (lindalog:make-constant 'b)))))
+  (let ((a (lindalog:make-atom (lindalog:make-pred-ref 'p)
+                               (list (lindalog:make-variable 'x)
+                                     (lindalog:make-variable 'x))))
+        (b (lindalog:make-atom (lindalog:make-pred-ref 'p)
+                               (list (lindalog:make-constant 'a)
+                                     (lindalog:make-constant 'b)))))
     (is (eq lindalog::+match-fail+
             (lindalog::match-atom a b lindalog::+no-bindings+)))))
 
 (test match-atom-existing-binding-consistent-succeeds
-  (let ((a (lindalog:make-atom 'p (list (lindalog:make-variable 'x))))
-        (b (lindalog:make-atom 'p (list (lindalog:make-constant 'a))))
+  (let ((a (lindalog:make-atom (lindalog:make-pred-ref 'p)
+                               (list (lindalog:make-variable 'x))))
+        (b (lindalog:make-atom (lindalog:make-pred-ref 'p)
+                               (list (lindalog:make-constant 'a))))
         (bindings (list (cons (lindalog:make-variable 'x)
                               (lindalog:make-constant 'a)))))
     (is (lindalog::bindings-equal-p
@@ -147,18 +167,22 @@
          (lindalog::match-atom a b bindings)))))
 
 (test match-atom-existing-binding-inconsistent-fails
-  (let ((a (lindalog:make-atom 'p (list (lindalog:make-variable 'x))))
-        (b (lindalog:make-atom 'p (list (lindalog:make-constant 'b))))
+  (let ((a (lindalog:make-atom (lindalog:make-pred-ref 'p)
+                               (list (lindalog:make-variable 'x))))
+        (b (lindalog:make-atom (lindalog:make-pred-ref 'p)
+                               (list (lindalog:make-constant 'b))))
         (bindings (list (cons (lindalog:make-variable 'x)
                               (lindalog:make-constant 'a)))))
     (is (eq lindalog::+match-fail+
             (lindalog::match-atom a b bindings)))))
 
 (test match-atom-preserves-existing-bindings
-  (let ((a (lindalog:make-atom 'p (list (lindalog:make-variable 'x)
-                                        (lindalog:make-variable 'y))))
-        (b (lindalog:make-atom 'p (list (lindalog:make-constant 'a)
-                                        (lindalog:make-constant 'b))))
+  (let ((a (lindalog:make-atom (lindalog:make-pred-ref 'p)
+                               (list (lindalog:make-variable 'x)
+                                     (lindalog:make-variable 'y))))
+        (b (lindalog:make-atom (lindalog:make-pred-ref 'p)
+                               (list (lindalog:make-constant 'a)
+                                     (lindalog:make-constant 'b))))
         (bindings (list (cons (lindalog:make-variable 'x)
                               (lindalog:make-constant 'a)))))
     (is (lindalog::bindings-equal-p
@@ -169,12 +193,14 @@
          (lindalog::match-atom a b bindings)))))
 
 (test match-atom-repeated-variable-after-intervening-variable-succeeds
-  (let ((a (lindalog:make-atom 'p (list (lindalog:make-variable 'x)
-                                        (lindalog:make-variable 'y)
-                                        (lindalog:make-variable 'x))))
-        (b (lindalog:make-atom 'p (list (lindalog:make-constant 'a)
-                                        (lindalog:make-constant 'b)
-                                        (lindalog:make-constant 'a)))))
+  (let ((a (lindalog:make-atom (lindalog:make-pred-ref 'p)
+                               (list (lindalog:make-variable 'x)
+                                     (lindalog:make-variable 'y)
+                                     (lindalog:make-variable 'x))))
+        (b (lindalog:make-atom (lindalog:make-pred-ref 'p)
+                               (list (lindalog:make-constant 'a)
+                                     (lindalog:make-constant 'b)
+                                     (lindalog:make-constant 'a)))))
     (is (lindalog::bindings-equal-p
          (list (cons (lindalog:make-variable 'x)
                      (lindalog:make-constant 'a))
@@ -183,12 +209,14 @@
          (lindalog::match-atom a b lindalog::+no-bindings+)))))
 
 (test match-atom-repeated-variable-after-intervening-variable-fails
-  (let ((a (lindalog:make-atom 'p (list (lindalog:make-variable 'x)
-                                        (lindalog:make-variable 'y)
-                                        (lindalog:make-variable 'x))))
-        (b (lindalog:make-atom 'p (list (lindalog:make-constant 'a)
-                                        (lindalog:make-constant 'b)
-                                        (lindalog:make-constant 'c)))))
+  (let ((a (lindalog:make-atom (lindalog:make-pred-ref 'p)
+                               (list (lindalog:make-variable 'x)
+                                     (lindalog:make-variable 'y)
+                                     (lindalog:make-variable 'x))))
+        (b (lindalog:make-atom (lindalog:make-pred-ref 'p)
+                               (list (lindalog:make-constant 'a)
+                                     (lindalog:make-constant 'b)
+                                     (lindalog:make-constant 'c)))))
     (is (eq lindalog::+match-fail+
             (lindalog::match-atom a b lindalog::+no-bindings+)))))
 
@@ -200,7 +228,7 @@
       (lindalog::add-predicate (car pair) (cdr pair) database))
     (dolist (atom atoms)
       (lindalog::add-fact atom
-                          (cdr (assoc (lindalog:atom-predicate atom)
+                          (cdr (assoc (lindalog:pred-ref-name (lindalog:atom-predicate atom))
                                       predicate-scs))
                           database))
     database))
@@ -215,9 +243,11 @@
 (test match-premises-one-premise-succeeds
   (let ((database (make-test-database
                    '((p . :rd))
-                   (list (lindalog:make-atom 'p (list (lindalog:make-constant 'a))))))
+                   (list (lindalog:make-atom (lindalog:make-pred-ref 'p)
+                                             (list (lindalog:make-constant 'a))))))
         (premise (lindalog:make-premise
-                  (lindalog:make-atom 'p (list (lindalog:make-variable 'x)))
+                  (lindalog:make-atom (lindalog:make-pred-ref 'p)
+                                      (list (lindalog:make-variable 'x)))
                   t)))
     (is (lindalog::bindings-equal-p (list (cons (lindalog:make-variable 'x)
                                                 (lindalog:make-constant 'a)))
@@ -230,9 +260,11 @@
 (test match-premises-one-premise-fails
   (let ((database (make-test-database
                    '((q . :rd))
-                   (list (lindalog:make-atom 'q (list (lindalog:make-constant 'a))))))
+                   (list (lindalog:make-atom (lindalog:make-pred-ref 'q)
+                                             (list (lindalog:make-constant 'a))))))
         (premise (lindalog:make-premise
-                  (lindalog:make-atom 'p (list (lindalog:make-variable 'x)))
+                  (lindalog:make-atom (lindalog:make-pred-ref 'p)
+                                      (list (lindalog:make-variable 'x)))
                   t)))
     (is (eq lindalog::+match-fail+
             (lindalog::match-premises
@@ -244,13 +276,17 @@
   (let ((database (make-test-database
                    '((p . :rd)
                      (q . :rd))
-                   (list (lindalog:make-atom 'p (list (lindalog:make-constant 'a)))
-                         (lindalog:make-atom 'q (list (lindalog:make-constant 'a))))))
+                   (list (lindalog:make-atom (lindalog:make-pred-ref 'p)
+                                             (list (lindalog:make-constant 'a)))
+                         (lindalog:make-atom (lindalog:make-pred-ref 'q)
+                                             (list (lindalog:make-constant 'a))))))
         (premises (list (lindalog:make-premise
-                         (lindalog:make-atom 'p (list (lindalog:make-variable 'x)))
+                         (lindalog:make-atom (lindalog:make-pred-ref 'p)
+                                             (list (lindalog:make-variable 'x)))
                          t)
                         (lindalog:make-premise
-                         (lindalog:make-atom 'q (list (lindalog:make-variable 'x)))
+                         (lindalog:make-atom (lindalog:make-pred-ref 'q)
+                                             (list (lindalog:make-variable 'x)))
                          t))))
     (is (lindalog::bindings-equal-p (list (cons (lindalog:make-variable 'x)
                                                 (lindalog:make-constant 'a)))
@@ -264,13 +300,17 @@
   (let ((database (make-test-database
                    '((p . :rd)
                      (q . :rd))
-                   (list (lindalog:make-atom 'p (list (lindalog:make-constant 'a)))
-                         (lindalog:make-atom 'q (list (lindalog:make-constant 'b))))))
+                   (list (lindalog:make-atom (lindalog:make-pred-ref 'p)
+                                             (list (lindalog:make-constant 'a)))
+                         (lindalog:make-atom (lindalog:make-pred-ref 'q)
+                                             (list (lindalog:make-constant 'b))))))
         (premises (list (lindalog:make-premise
-                         (lindalog:make-atom 'p (list (lindalog:make-variable 'x)))
+                         (lindalog:make-atom (lindalog:make-pred-ref 'p)
+                                             (list (lindalog:make-variable 'x)))
                          t)
                         (lindalog:make-premise
-                         (lindalog:make-atom 'q (list (lindalog:make-variable 'x)))
+                         (lindalog:make-atom (lindalog:make-pred-ref 'q)
+                                             (list (lindalog:make-variable 'x)))
                          t))))
     (is (eq lindalog::+match-fail+
             (lindalog::match-premises
@@ -282,14 +322,19 @@
   (let ((database (make-test-database
                    '((p . :in)
                      (q . :in))
-                   (list (lindalog:make-atom 'p (list (lindalog:make-constant 'a)))
-                         (lindalog:make-atom 'p (list (lindalog:make-constant 'b)))
-                         (lindalog:make-atom 'q (list (lindalog:make-constant 'b))))))
+                   (list (lindalog:make-atom (lindalog:make-pred-ref 'p)
+                                             (list (lindalog:make-constant 'a)))
+                         (lindalog:make-atom (lindalog:make-pred-ref 'p)
+                                             (list (lindalog:make-constant 'b)))
+                         (lindalog:make-atom (lindalog:make-pred-ref 'q)
+                                             (list (lindalog:make-constant 'b))))))
         (premises (list (lindalog:make-premise
-                         (lindalog:make-atom 'p (list (lindalog:make-variable 'x)))
+                         (lindalog:make-atom (lindalog:make-pred-ref 'p)
+                                             (list (lindalog:make-variable 'x)))
                          t)
                         (lindalog:make-premise
-                         (lindalog:make-atom 'q (list (lindalog:make-variable 'x)))
+                         (lindalog:make-atom (lindalog:make-pred-ref 'q)
+                                             (list (lindalog:make-variable 'x)))
                          t))))
     (is (lindalog::bindings-equal-p (list (cons (lindalog:make-variable 'x)
                                                 (lindalog:make-constant 'b)))
@@ -303,9 +348,11 @@
   (let ((database (make-test-database
                    '((p . :in)
                      (q . :in))
-                   (list (lindalog:make-atom 'p (list (lindalog:make-constant 'a))))))
+                   (list (lindalog:make-atom (lindalog:make-pred-ref 'p)
+                                             (list (lindalog:make-constant 'a))))))
         (premises (list (lindalog:make-premise
-                         (lindalog:make-atom 'p (list (lindalog:make-variable 'x)))
+                         (lindalog:make-atom (lindalog:make-pred-ref 'p)
+                                             (list (lindalog:make-variable 'x)))
                          t)))
         (match (lindalog::extend-match-bindings (lindalog::make-match)
                                                 (list (cons (lindalog:make-variable 'x)
@@ -321,9 +368,11 @@
 (test match-premises-inconsistent-existing-binding-fails
   (let ((database (make-test-database
                    '((p . :in))
-                   (list (lindalog:make-atom 'p (list (lindalog:make-constant 'a))))))
+                   (list (lindalog:make-atom (lindalog:make-pred-ref 'p)
+                                             (list (lindalog:make-constant 'a))))))
         (premises (list (lindalog:make-premise
-                         (lindalog:make-atom 'p (list (lindalog:make-variable 'x)))
+                         (lindalog:make-atom (lindalog:make-pred-ref 'p)
+                                             (list (lindalog:make-variable 'x)))
                          t)))
         (match (lindalog::extend-match-bindings (lindalog::make-match)
                                                 (list (cons (lindalog:make-variable 'x)
@@ -335,12 +384,14 @@
              match)))))
 
 (test match-premises-consuming-in-premise-records-consumed-fact
-  (let* ((a (lindalog:make-atom 'p (list (lindalog:make-constant 'a))))
+  (let* ((a (lindalog:make-atom (lindalog:make-pred-ref 'p)
+                                (list (lindalog:make-constant 'a))))
          (database (make-test-database
                    '((p . :in))
                    (list a)))
          (premise (lindalog:make-premise
-                   (lindalog:make-atom 'p (list (lindalog:make-variable 'x)))
+                   (lindalog:make-atom (lindalog:make-pred-ref 'p)
+                                       (list (lindalog:make-variable 'x)))
                    nil)))
     (is (member a
                 (lindalog::match-consumed-facts
@@ -352,12 +403,14 @@
                 :test #'lindalog:ast-equal-p))))
 
 (test match-premises-read-only-in-premise-records-read-fact
-  (let* ((a (lindalog:make-atom 'p (list (lindalog:make-constant 'a))))
+  (let* ((a (lindalog:make-atom (lindalog:make-pred-ref 'p)
+                                (list (lindalog:make-constant 'a))))
          (database (make-test-database
                    '((p . :in))
                    (list a)))
          (premise (lindalog:make-premise
-                   (lindalog:make-atom 'p (list (lindalog:make-variable 'x)))
+                   (lindalog:make-atom (lindalog:make-pred-ref 'p)
+                                       (list (lindalog:make-variable 'x)))
                    t)))
     (is (member a
                 (lindalog::match-read-facts
@@ -369,12 +422,14 @@
                 :test #'lindalog:ast-equal-p))))
 
 (test match-premises-rd-premise-records-read-fact
-  (let* ((a (lindalog:make-atom 'p (list (lindalog:make-constant 'a))))
+  (let* ((a (lindalog:make-atom (lindalog:make-pred-ref 'p)
+                                (list (lindalog:make-constant 'a))))
          (database (make-test-database
                    '((p . :rd))
                    (list a)))
          (premise (lindalog:make-premise
-                   (lindalog:make-atom 'p (list (lindalog:make-variable 'x)))
+                   (lindalog:make-atom (lindalog:make-pred-ref 'p)
+                                       (list (lindalog:make-variable 'x)))
                    t)))
     (is (member a
                 (lindalog::match-read-facts
@@ -386,12 +441,14 @@
                 :test #'lindalog:ast-equal-p))))
 
 (test match-premises-sig-premise-records-read-fact
-  (let* ((a (lindalog:make-atom 'p (list (lindalog:make-constant 'a))))
+  (let* ((a (lindalog:make-atom (lindalog:make-pred-ref 'p)
+                                (list (lindalog:make-constant 'a))))
          (database (make-test-database
                    '((p . :sig))
                    (list a)))
          (premise (lindalog:make-premise
-                   (lindalog:make-atom 'p (list (lindalog:make-variable 'x)))
+                   (lindalog:make-atom (lindalog:make-pred-ref 'p)
+                                       (list (lindalog:make-variable 'x)))
                    t)))
     (is (member a
                 (lindalog::match-read-facts
@@ -405,12 +462,15 @@
 (test match-premises-two-consuming-premises-cannot-reuse-fact
   (let ((database (make-test-database
                    '((p . :in))
-                   (list (lindalog:make-atom 'p (list (lindalog:make-constant 'a))))))
+                   (list (lindalog:make-atom (lindalog:make-pred-ref 'p)
+                                             (list (lindalog:make-constant 'a))))))
         (premises (list (lindalog:make-premise
-                         (lindalog:make-atom 'p (list (lindalog:make-variable 'x)))
+                         (lindalog:make-atom (lindalog:make-pred-ref 'p)
+                                             (list (lindalog:make-variable 'x)))
                          nil)
                         (lindalog:make-premise
-                         (lindalog:make-atom 'p (list (lindalog:make-variable 'x)))
+                         (lindalog:make-atom (lindalog:make-pred-ref 'p)
+                                             (list (lindalog:make-variable 'x)))
                          nil))))
     (is (eq lindalog::+match-fail+
             (lindalog::match-premises
@@ -419,15 +479,18 @@
              (lindalog::make-match))))))
 
 (test match-premises-two-consuming-premises-can-use-distinct-equal-facts
-  (let* ((a (lindalog:make-atom 'p (list (lindalog:make-constant 'a))))
+  (let* ((a (lindalog:make-atom (lindalog:make-pred-ref 'p)
+                                (list (lindalog:make-constant 'a))))
          (database (make-test-database
                     '((p . :in))
                     (list a a)))
          (premises (list (lindalog:make-premise
-                          (lindalog:make-atom 'p (list (lindalog:make-variable 'x)))
+                          (lindalog:make-atom (lindalog:make-pred-ref 'p)
+                                              (list (lindalog:make-variable 'x)))
                           nil)
                          (lindalog:make-premise
-                          (lindalog:make-atom 'p (list (lindalog:make-variable 'x)))
+                          (lindalog:make-atom (lindalog:make-pred-ref 'p)
+                                              (list (lindalog:make-variable 'x)))
                           nil))))
     (is (= 2 (count a
                     (lindalog::match-consumed-facts
@@ -441,9 +504,11 @@
 (test match-premises-rejected-match-fails
   (let ((database (make-test-database
                    '((p . :rd))
-                   (list (lindalog:make-atom 'p (list (lindalog:make-constant 'a))))))
+                   (list (lindalog:make-atom (lindalog:make-pred-ref 'p)
+                                             (list (lindalog:make-constant 'a))))))
         (premise (lindalog:make-premise
-                  (lindalog:make-atom 'p (list (lindalog:make-variable 'x)))
+                  (lindalog:make-atom (lindalog:make-pred-ref 'p)
+                                      (list (lindalog:make-variable 'x)))
                   t)))
     (is (eq lindalog::+match-fail+
             (lindalog::match-premises
@@ -453,15 +518,19 @@
              (constantly nil))))))
 
 (test match-premises-backtracks-after-rejected-match
-  (let* ((b (lindalog:make-atom 'p (list (lindalog:make-constant 'b))))
+  (let* ((b (lindalog:make-atom (lindalog:make-pred-ref 'p)
+                                (list (lindalog:make-constant 'b))))
          (database (make-test-database
                     '((p . :in))
                     (list
-                     (lindalog:make-atom 'p (list (lindalog:make-constant 'a)))
+                     (lindalog:make-atom (lindalog:make-pred-ref 'p)
+                                         (list (lindalog:make-constant 'a)))
                      b
-                     (lindalog:make-atom 'p (list (lindalog:make-constant 'c))))))
+                     (lindalog:make-atom (lindalog:make-pred-ref 'p)
+                                         (list (lindalog:make-constant 'c))))))
          (premise (lindalog:make-premise
-                   (lindalog:make-atom 'p (list (lindalog:make-variable 'x)))
+                   (lindalog:make-atom (lindalog:make-pred-ref 'p)
+                                       (list (lindalog:make-variable 'x)))
                    nil)))
     (is (member b
                 (lindalog::match-consumed-facts
@@ -480,15 +549,18 @@
                 :test #'lindalog:ast-equal-p))))
 
 (test match-premises-read-and-consuming-premises-can-share-in-fact
-    (let* ((a (lindalog:make-atom 'p (list (lindalog:make-constant 'a))))
+    (let* ((a (lindalog:make-atom (lindalog:make-pred-ref 'p)
+                                  (list (lindalog:make-constant 'a))))
            (database (make-test-database
                       '((p . :in))
                       (list a)))
            (premises (list (lindalog:make-premise
-                            (lindalog:make-atom 'p (list (lindalog:make-variable 'x)))
+                            (lindalog:make-atom (lindalog:make-pred-ref 'p)
+                                                (list (lindalog:make-variable 'x)))
                             nil)
                            (lindalog:make-premise
-                            (lindalog:make-atom 'p (list (lindalog:make-variable 'x)))
+                            (lindalog:make-atom (lindalog:make-pred-ref 'p)
+                                                (list (lindalog:make-variable 'x)))
                             t)))
            (match (lindalog::match-premises
                         premises

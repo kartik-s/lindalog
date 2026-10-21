@@ -32,7 +32,7 @@
 
 (defun add-fact (atom sc database)
   "Add ATOM to the SC table of DATABASE as a FACT."
-  (let ((pred (atom-predicate atom))
+  (let ((pred (pred-ref-name (atom-predicate atom)))
         (store (ecase sc
                  (:rd (database-rd-store database))
                  (:in (database-in-store database))

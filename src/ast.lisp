@@ -18,10 +18,15 @@
   (name nil :type symbol
             :read-only t))
 
+(defstruct (pred-ref
+            (:include ast-node)
+            (:constructor make-pred-ref (name &key cst)))
+  (name nil :type symbol :read-only t))
+
 (defstruct (atom
             (:include ast-node)
             (:constructor make-atom (predicate args &key cst)))
-  (predicate nil :type symbol
+  (predicate nil :type pred-ref
                  :read-only t)
   (args nil :type list
             :read-only t))
@@ -95,8 +100,11 @@
 (defmethod ast-equal-p ((a variable) (b variable))
   (string= (variable-name a) (variable-name b)))
 
+(defmethod ast-equal-p ((a pred-ref) (b pred-ref))
+  (string= (pred-ref-name a) (pred-ref-name b)))
+
 (defmethod ast-equal-p ((a atom) (b atom))
-  (and (string= (atom-predicate a) (atom-predicate b))
+  (and (ast-equal-p (atom-predicate a) (atom-predicate b))
        (= (length (atom-args a))
           (length (atom-args b)))
        (every #'ast-equal-p

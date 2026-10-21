@@ -84,36 +84,42 @@
 
 (test parse-atom-with-no-arguments
   (is (lindalog:ast-equal-p
-       (lindalog:make-atom 'p '())
+       (lindalog:make-atom (lindalog:make-pred-ref 'p)
+                           '())
        (lindalog:parse-atom (as-cst '(p))))))
 
 (test parse-atom-with-constant-argument
   (is (lindalog:ast-equal-p
-       (lindalog:make-atom 'p (list (lindalog:make-constant 'a)))
+       (lindalog:make-atom (lindalog:make-pred-ref 'p)
+                           (list (lindalog:make-constant 'a)))
        (lindalog:parse-atom (as-cst '(p a))))))
 
 (test parse-atom-with-integer-argument
   (is (lindalog:ast-equal-p
-       (lindalog:make-atom 'p (list (lindalog:make-constant 2)))
+       (lindalog:make-atom (lindalog:make-pred-ref 'p)
+                           (list (lindalog:make-constant 2)))
        (lindalog:parse-atom (as-cst '(p 2))))))
 
 (test parse-atom-preserves-argument-order
   (is (lindalog:ast-equal-p
-       (lindalog:make-atom 'p (list (lindalog:make-variable '?x)
-                                    (lindalog:make-constant 'a)
-                                    (lindalog:make-constant 2)))
+       (lindalog:make-atom (lindalog:make-pred-ref 'p)
+                           (list (lindalog:make-variable '?x)
+                                 (lindalog:make-constant 'a)
+                                 (lindalog:make-constant 2)))
        (lindalog:parse-atom (as-cst '(p ?x a 2))))))
 
 (test parse-atom-with-repeated-variables
   (is (lindalog:ast-equal-p
-       (lindalog:make-atom 'p (list (lindalog:make-variable '?x)
-                                    (lindalog:make-variable '?x)))
+       (lindalog:make-atom (lindalog:make-pred-ref 'p)
+                           (list (lindalog:make-variable '?x)
+                                 (lindalog:make-variable '?x)))
        (lindalog:parse-atom (as-cst '(p ?x ?x))))))
 
 (test parse-atom-preserves-predicate
-  (is (eq (lindalog:atom-predicate
-           (lindalog:parse-atom (as-cst '(p 2))))
-          'p)))
+  (is (lindalog:ast-equal-p
+       (lindalog:atom-predicate
+        (lindalog:parse-atom (as-cst '(p 2))))
+       (lindalog:make-pred-ref 'p))))
 
 (test parse-atom-with-bare-question-mark
   (signals lindalog:syntax-error
@@ -194,21 +200,24 @@
   (is (lindalog:ast-equal-p
        (lindalog:parse-premise (as-cst '(p ?x)))
        (lindalog:make-premise
-        (lindalog:make-atom 'p (list (lindalog:make-variable '?x)))
+        (lindalog:make-atom (lindalog:make-pred-ref 'p)
+                            (list (lindalog:make-variable '?x)))
         nil))))
 
 (test parse-premise-with-rd-wrapped-atom
   (is (lindalog:ast-equal-p
        (lindalog:parse-premise (as-cst '(:rd (p ?x))))
        (lindalog:make-premise
-        (lindalog:make-atom 'p (list (lindalog:make-variable '?x)))
+        (lindalog:make-atom (lindalog:make-pred-ref 'p)
+                            (list (lindalog:make-variable '?x)))
         t))))
 
 (test parse-premise-with-rd-preserves-inner-atom
   (is (lindalog:ast-equal-p
        (lindalog:premise-atom
         (lindalog:parse-premise (as-cst '(:rd (p ?x)))))
-       (lindalog:make-atom 'p (list (lindalog:make-variable '?x))))))
+       (lindalog:make-atom (lindalog:make-pred-ref 'p)
+                           (list (lindalog:make-variable '?x))))))
 
 (test parse-premise-with-non-keyword-rd
   (signals lindalog:syntax-error
@@ -466,28 +475,32 @@
 (test parse-init-fact-with-constant-arguments
   (is (lindalog:ast-equal-p
        (lindalog:make-init-fact
-        (lindalog:make-atom 'p (list (lindalog:make-constant 'a)
-                                     (lindalog:make-constant 'b))))
+        (lindalog:make-atom (lindalog:make-pred-ref 'p)
+                            (list (lindalog:make-constant 'a)
+                                  (lindalog:make-constant 'b))))
        (lindalog:parse-init-fact (as-cst '(deffact (p a b)))))))
 
 (test parse-init-fact-with-no-arguments
   (is (lindalog:ast-equal-p
        (lindalog:make-init-fact
-        (lindalog:make-atom 'p '()))
+        (lindalog:make-atom (lindalog:make-pred-ref 'p)
+                            '()))
        (lindalog:parse-init-fact (as-cst '(deffact (p)))))))
 
 (test parse-init-fact-with-integer-argument
   (is (lindalog:ast-equal-p
        (lindalog:make-init-fact
-        (lindalog:make-atom 'p (list (lindalog:make-constant 'a)
-                                     (lindalog:make-constant 3))))
+        (lindalog:make-atom (lindalog:make-pred-ref 'p)
+                            (list (lindalog:make-constant 'a)
+                                  (lindalog:make-constant 3))))
        (lindalog:parse-init-fact (as-cst '(deffact (p a 3)))))))
 
 (test parse-init-fact-with-docstring
   (let ((a (lindalog:parse-init-fact (as-cst '(deffact (p a 3) (:doc "foo")))))
         (b (lindalog:make-init-fact
-            (lindalog:make-atom 'p (list (lindalog:make-constant 'a)
-                                         (lindalog:make-constant 3)))
+            (lindalog:make-atom (lindalog:make-pred-ref 'p)
+                                (list (lindalog:make-constant 'a)
+                                      (lindalog:make-constant 3)))
             :docstring "foo")))
     (is (lindalog:ast-equal-p a b))
     (is (string= (lindalog:init-fact-docstring a)
@@ -556,9 +569,11 @@
        (lindalog:make-rule
         'foo
         (list (lindalog:make-premise
-               (lindalog:make-atom 'p (list (lindalog:make-constant 'a)))
+               (lindalog:make-atom (lindalog:make-pred-ref 'p)
+                                   (list (lindalog:make-constant 'a)))
                nil))
-        (list (lindalog:make-atom 'q (list (lindalog:make-constant 'a)))))
+        (list (lindalog:make-atom (lindalog:make-pred-ref 'q)
+                                  (list (lindalog:make-constant 'a)))))
        (lindalog:parse-rule (as-cst '(defrule foo
                                      (:when (p a))
                                      (:then (q a))))))))
@@ -568,15 +583,19 @@
        (lindalog:make-rule
         'foo
         (list (lindalog:make-premise
-               (lindalog:make-atom'p (list (lindalog:make-constant 'a)))
+               (lindalog:make-atom (lindalog:make-pred-ref 'p)
+                                   (list (lindalog:make-constant 'a)))
                nil)
               (lindalog:make-premise
-               (lindalog:make-atom 'p (list (lindalog:make-constant 'b)))
+               (lindalog:make-atom (lindalog:make-pred-ref 'p)
+                                   (list (lindalog:make-constant 'b)))
                nil)
               (lindalog:make-premise
-               (lindalog:make-atom 'q (list (lindalog:make-constant 'c)))
+               (lindalog:make-atom (lindalog:make-pred-ref 'q)
+                                   (list (lindalog:make-constant 'c)))
                t))
-        (list (lindalog:make-atom 'q (list (lindalog:make-constant 'a)))))
+        (list (lindalog:make-atom (lindalog:make-pred-ref 'q)
+                                  (list (lindalog:make-constant 'a)))))
        (lindalog:parse-rule (as-cst '(defrule foo
                                      (:when (p a) (p b) (:rd (q c)))
                                      (:then (q a))))))))
@@ -586,12 +605,15 @@
        (lindalog:make-rule
         'foo
         (list (lindalog:make-premise
-               (lindalog:make-atom 'p (list (lindalog:make-constant 'a)))
+               (lindalog:make-atom (lindalog:make-pred-ref 'p)
+                                   (list (lindalog:make-constant 'a)))
                nil)
               (lindalog:make-premise
-               (lindalog:make-atom 'q (list (lindalog:make-constant 'b)))
+               (lindalog:make-atom (lindalog:make-pred-ref 'q)
+                                   (list (lindalog:make-constant 'b)))
                t))
-        (list (lindalog:make-atom 'q (list (lindalog:make-constant 'a)))))
+        (list (lindalog:make-atom (lindalog:make-pred-ref 'q)
+                                  (list (lindalog:make-constant 'a)))))
        (lindalog:parse-rule (as-cst '(defrule foo
                                      (:when (p a) (:rd (q b)))
                                      (:then (q a))))))))
@@ -601,11 +623,15 @@
        (lindalog:make-rule
         'foo
         (list (lindalog:make-premise
-               (lindalog:make-atom 'q (list (lindalog:make-constant 'a)))
+               (lindalog:make-atom (lindalog:make-pred-ref 'q)
+                                   (list (lindalog:make-constant 'a)))
                nil))
-        (list (lindalog:make-atom'p (list (lindalog:make-constant 'a)))
-              (lindalog:make-atom 'p (list (lindalog:make-constant 'b)))
-              (lindalog:make-atom 'q (list (lindalog:make-constant 'c)))))
+        (list (lindalog:make-atom (lindalog:make-pred-ref 'p)
+                                  (list (lindalog:make-constant 'a)))
+              (lindalog:make-atom (lindalog:make-pred-ref 'p)
+                                  (list (lindalog:make-constant 'b)))
+              (lindalog:make-atom (lindalog:make-pred-ref 'q)
+                                  (list (lindalog:make-constant 'c)))))
        (lindalog:parse-rule (as-cst '(defrule foo
                                      (:when (q a))
                                      (:then (p a) (p b) (q c))))))))
@@ -615,7 +641,8 @@
        (lindalog:make-rule
         'foo
         (list (lindalog:make-premise
-               (lindalog:make-atom 'p (list (lindalog:make-constant 'a)))
+               (lindalog:make-atom (lindalog:make-pred-ref 'p)
+                                   (list (lindalog:make-constant 'a)))
                nil))
         nil)
        (lindalog:parse-rule (as-cst '(defrule foo
@@ -635,9 +662,11 @@
   (let ((a (lindalog:make-rule
             'foo
             (list (lindalog:make-premise
-                   (lindalog:make-atom 'p (list (lindalog:make-constant 'a)))
+                   (lindalog:make-atom (lindalog:make-pred-ref 'p)
+                                       (list (lindalog:make-constant 'a)))
                    nil))
-            (list (lindalog:make-atom 'q (list (lindalog:make-constant 'a))))
+            (list (lindalog:make-atom (lindalog:make-pred-ref 'q)
+                                      (list (lindalog:make-constant 'a))))
             :docstring "Consume (p a) and produce (q a)."))
         (b (lindalog:parse-rule (as-cst '(defrule foo
                                           (:doc "Consume (p a) and produce (q a).")
@@ -651,9 +680,11 @@
   (let ((a (lindalog:make-rule
             'foo
             (list (lindalog:make-premise
-                   (lindalog:make-atom 'p (list (lindalog:make-constant 'a)))
+                   (lindalog:make-atom (lindalog:make-pred-ref 'p)
+                                       (list (lindalog:make-constant 'a)))
                    nil))
-            (list (lindalog:make-atom 'q (list (lindalog:make-constant 'a))))))
+            (list (lindalog:make-atom (lindalog:make-pred-ref 'q)
+                                      (list (lindalog:make-constant 'a))))))
         (b (lindalog:parse-rule (as-cst '(defrule foo
                                          (:when (p a))
                                          (:then (q a)))))))
@@ -827,25 +858,30 @@
 (test parse-toplevel-parses-deffact
   (is (lindalog:ast-equal-p
        (lindalog:make-init-fact
-        (lindalog:make-atom 'p (list (lindalog:make-constant 'a))))
+        (lindalog:make-atom (lindalog:make-pred-ref 'p)
+                            (list (lindalog:make-constant 'a))))
        (lindalog:parse-toplevel (as-cst '(deffact (p a)))))))
 
 (test parse-toplevel-parses-defrule
   (is (lindalog:ast-equal-p
        (lindalog:make-rule 'foo
                            (list (lindalog:make-premise
-                                  (lindalog:make-atom 'p (list (lindalog:make-constant 'a)))
+                                  (lindalog:make-atom (lindalog:make-pred-ref 'p)
+                                                      (list (lindalog:make-constant 'a)))
                                   nil))
-                           (list (lindalog:make-atom 'q (list (lindalog:make-constant 'a)))))
+                           (list (lindalog:make-atom (lindalog:make-pred-ref 'q)
+                                                     (list (lindalog:make-constant 'a)))))
        (lindalog:parse-toplevel (as-cst '(defrule foo (:when (p a)) (:then (q a))))))))
 
 (test parse-toplevel-dispatches-by-symbol-name
   (is (lindalog:ast-equal-p
        (lindalog:make-rule 'foo
                            (list (lindalog:make-premise
-                                  (lindalog:make-atom 'p (list (lindalog:make-constant 'a)))
+                                  (lindalog:make-atom (lindalog:make-pred-ref 'p)
+                                                      (list (lindalog:make-constant 'a)))
                                   nil))
-                           (list (lindalog:make-atom 'q (list (lindalog:make-constant 'a)))))
+                           (list (lindalog:make-atom (lindalog:make-pred-ref 'q)
+                                                     (list (lindalog:make-constant 'a)))))
        (lindalog:parse-toplevel (as-cst '(#:defrule foo (:when (p a)) (:then (q a))))))))
 
 (test parse-toplevel-rejects-atom-toplevel
