@@ -3,8 +3,10 @@
 (defpackage #:lindalog
   (:use #:cl)
   (:local-nicknames (#:cst #:concrete-syntax-tree))
-  (:shadow #:variable #:atom)
+  (:shadow #:variable #:atom #:unbound-variable)
   (:export
+
+   #:ast-node-cst
 
    #:make-constant
    #:constant-p
@@ -71,6 +73,15 @@
 
    #:semantic-error
    #:semantic-error-ast
+   #:semantic-error-related
+
+   #:undeclared-predicate
+   #:arity-mismatch
+   #:variable-in-fact
+   #:redundant-rd
+   #:unbound-variable
+   #:duplicate-predicate
+   #:duplicate-rule
 
    #:invalid-program
    #:invalid-program-errors
@@ -89,4 +100,6 @@
    #:parse-program
 
    #:read-program
+
+   #:validate-program
    ))

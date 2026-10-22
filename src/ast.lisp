@@ -168,3 +168,55 @@ the same quantity."
             (every #'ast-equal-p
                    (program-rules a)
                    (program-rules b)))))
+
+(defgeneric variables-in(node)
+  (:documentation "Collect the variables contained in NODE."))
+
+(defmethod variables-in ((node constant))
+  nil)
+
+(defmethod variables-in ((node variable))
+  (list node))
+
+(defmethod variables-in ((node pred-ref))
+  nil)
+
+(defmethod variables-in ((node atom))
+  (remove-duplicates
+   (loop :for arg :in (atom-args node)
+         :append (variables-in arg))
+   :test #'ast-equal-p
+   :from-end t))
+
+(defmethod variables-in ((node premise))
+  (variables-in (premise-atom node)))
+
+(defmethod variables-in ((node pred-decl))
+  nil)
+
+(defmethod variables-in ((node init-fact))
+  (variables-in (init-fact-atom node)))
+
+(defmethod variables-in ((node rule))
+  (remove-duplicates
+   (loop :for child :in (append (rule-lhs node)
+                                (rule-rhs node))
+         :append (variables-in child))
+   :test #'ast-equal-p
+   :from-end t))
+
+(defmethod variables-in ((node program))
+  (remove-duplicates
+   (loop :for child :in (append (program-init-facts node)
+                                (program-rules node))
+         :append (variables-in child))
+   :test #'ast-equal-p
+   :from-end t))
+
+(defmethod collect-variables (nodes)
+  "Collect the variables in each node in NODES."
+  (remove-duplicates
+   (loop :for node :in nodes
+         :append (variables-in node))
+   :test #'ast-equal-p
+   :from-end t))

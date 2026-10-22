@@ -39,10 +39,35 @@
 (define-condition semantic-error (source-error)
   ((ast :initarg :ast
         :initform nil
-        :reader semantic-error-ast)))
+        :reader semantic-error-ast)
+   (related :initarg :related
+            :initform nil
+            :reader semantic-error-related
+            :documentation "A list of (NODE . NOTE) pairs for other relevant locations.")))
 
 (defmethod source-error-range ((condition semantic-error))
   (cst:source (ast-node-cst (semantic-error-ast condition))))
+
+(define-condition undeclared-predicate (semantic-error)
+  ())
+
+(define-condition arity-mismatch (semantic-error)
+  ())
+
+(define-condition variable-in-fact (semantic-error)
+  ())
+
+(define-condition redundant-rd (semantic-error)
+  ())
+
+(define-condition unbound-variable (semantic-error)
+  ())
+
+(define-condition duplicate-predicate (semantic-error)
+  ())
+
+(define-condition duplicate-rule (semantic-error)
+  ())
 
 (define-condition invalid-program (lindalog-error)
   ((errors :initarg :errors
@@ -52,5 +77,7 @@
              (format stream "~{~a~^~%~}"
                      (invalid-program-errors condition)))))
 
-(define-condition program-syntax-errors (invalid-program) ())
-(define-condition program-semantic-errors (invalid-program) ())
+(define-condition program-syntax-errors (invalid-program)
+  ())
+(define-condition program-semantic-errors (invalid-program)
+  ())

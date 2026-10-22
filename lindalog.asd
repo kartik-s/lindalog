@@ -17,9 +17,11 @@
      (:file "conditions")
      (:file "reader")
      (:file "parser")
+     (:file "validator")
      (:file "state")
      (:file "match")
-     (:file "lindalog"))))
+     (:file "lindalog")
+     )))
   :in-order-to ((asdf:test-op (asdf:test-op "lindalog/tests"))))
 
 (asdf:defsystem #:lindalog/tests
@@ -37,6 +39,7 @@
      (:file "match")
      (:file "reader")
      (:file "parser")
+     (:file "validator")
      )))
   :perform (asdf:test-op (op c)
                          (declare (ignore op c))
