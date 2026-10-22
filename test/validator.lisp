@@ -71,7 +71,7 @@ semantic errors found."
       (is (string= (string-trim '(#\Newline) second-decl)
                    (covered-text (lindalog:semantic-error-ast e1) program)))
       (let ((related (lindalog:semantic-error-related e1)))
-        (= 1 (length related))
+        (is (= 1 (length related)))
         (is (string= (string-trim '(#\Newline) first-decl)
                      (covered-text (car (first related)) program)))))))
 
@@ -101,7 +101,7 @@ semantic errors found."
       (is (string= (string-trim '(#\Newline) third-decl)
                    (covered-text (lindalog:semantic-error-ast e1) program)))
       (let ((related (lindalog:semantic-error-related e1)))
-        (= 1 (length related))
+        (is (= 1 (length related)))
         (is (string= (string-trim '(#\Newline) second-decl)
                      (covered-text (car (first related)) program)))))))
 
@@ -130,14 +130,14 @@ semantic errors found."
       (is (string= (string-trim '(#\Newline) second-decl)
                    (covered-text (lindalog:semantic-error-ast e1) program)))
       (let ((related (lindalog:semantic-error-related e1)))
-        (= 1 (length related))
+        (is (= 1 (length related)))
         (is (string= (string-trim '(#\Newline) first-decl)
                      (covered-text (car (first related)) program))))
       (is (typep e2 'lindalog:duplicate-predicate))
       (is (string= (string-trim '(#\Newline) third-decl)
                    (covered-text (lindalog:semantic-error-ast e2) program)))
       (let ((related (lindalog:semantic-error-related e2)))
-        (= 1 (length related))
+        (is (= 1 (length related)))
         (is (string= (string-trim '(#\Newline) first-decl)
                      (covered-text (car (first related)) program)))))))
 
@@ -203,14 +203,14 @@ semantic errors found."
       (is (string= "(p 1)" (covered-text (lindalog:semantic-error-ast e1) program)))
       (let ((related1 (lindalog:semantic-error-related e1)))
         (is (not (null related1)))
-        (string= (string-trim '(#\Newline) first-decl)
-                 (covered-text (car (first related1)) program)))
+        (is (string= (string-trim '(#\Newline) first-decl)
+                     (covered-text (car (first related1)) program))))
       (is (typep e2 'lindalog:arity-mismatch))
       (is (string= "(p ?x ?y ?z)" (covered-text (lindalog:semantic-error-ast e2) program)))
       (let ((related2 (lindalog:semantic-error-related e2)))
         (is (not (null related2)))
-        (string= (string-trim '(#\Newline) first-decl)
-                 (covered-text (car (first related2)) program))))))
+        (is (string= (string-trim '(#\Newline) first-decl)
+                     (covered-text (car (first related2)) program)))))))
 
 (test validate-program-correct-arities
   (let* ((first-decl "
