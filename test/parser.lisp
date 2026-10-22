@@ -533,10 +533,6 @@
   (signals lindalog:syntax-error
     (lindalog:parse-init-fact (as-cst '(deffact (3 a))))))
 
-(test parse-init-fact-rejects-variable
-  (signals lindalog:syntax-error
-    (lindalog:parse-init-fact (as-cst '(deffact (p ?x b))))))
-
 (test parse-init-fact-rejects-rd-marker
   (signals lindalog:syntax-error
     (lindalog:parse-init-fact (as-cst '(deffact (:rd (p a)))))))
@@ -552,15 +548,6 @@
                (fail "no error signaled"))
       (lindalog:syntax-error (e)
         (is (eq input (lindalog:syntax-error-cst e)))))))
-
-(test parse-init-fact-groundness-error-carries-arg
-  (let* ((input (as-cst '(deffact (p ?x b))))
-         (arg (cst:second (cst:second input))))
-    (handler-case
-        (progn (lindalog:parse-init-fact input)
-               (fail "no error signaled"))
-      (lindalog:syntax-error (e)
-        (is (eq arg (lindalog:syntax-error-cst e)))))))
 
 ;;; PARSE-RULE
 

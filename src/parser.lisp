@@ -277,7 +277,6 @@ is malformed."
                :cst cst
                :message "fact definition must be of the form (deffact <atom> (:doc <string>)?)")
         (let* ((atom (parse-atom (second parts)))
-               (vars (atom-variables atom))
                (clauses (collect-clauses cst (cddr parts) *init-fact-clauses*))
                (doc-cst (cdr (assoc :doc clauses))))
           (if (and doc-cst
@@ -286,13 +285,8 @@ is malformed."
               (error 'syntax-error
                      :cst doc-cst
                      :message ":doc clause must be of the form (:doc <string>)")
-              (if (null vars)
-                  (make-init-fact atom :docstring (when doc-cst (cst:raw (cst:second doc-cst)))
-                                       :cst cst)
-                  (error 'syntax-error
-                         :cst (ast-node-cst (first vars))
-                         :message (format nil "fact atom contains a variable and is therefore not ground: ~s"
-                                          (variable-name (first vars))))))))))
+              (make-init-fact atom :docstring (when doc-cst (cst:raw (cst:second doc-cst)))
+                                   :cst cst))))))
 
 (defun parse-rule (cst)
   "Parse CST into a RULE AST node, signaling SYNTAX-ERROR if CST is
