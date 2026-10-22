@@ -17,7 +17,7 @@
 
 (defparameter *rule-clauses*
   (list (clause-spec :when "(:when <atom>+)" :required-p t)
-        (clause-spec :then "(:then <atom>*)" :required-p t)
+        (clause-spec :then "(:then <atom>*)")
         (clause-spec :doc "(:doc <string>)")))
 
 (defun variable-symbol-p (x)
@@ -341,14 +341,10 @@ malformed."
                             (error 'syntax-error
                                    :cst when-cst
                                    :message ":when clause has no premises"))
-                           ((not then-cst)
-                            (error 'syntax-error
-                                   :cst then-cst
-                                   :message ":then clause must be of the form (:then <atom>*)"))
                            (t (make-rule
                                name
                                (mapcar #'parse-premise (rest (cst:listify when-cst)))
-                               (mapcar #'parse-conclusion (rest (cst:listify then-cst)))
+                               (mapcar #'parse-conclusion (and then-cst (rest (cst:listify then-cst))))
                                :docstring (and doc-cst (cst:raw (cst:second doc-cst)))
                                :cst cst))))))))))
 
