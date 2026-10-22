@@ -110,7 +110,7 @@ malformed."
                       (error 'syntax-error
                              :cst predicate-cst
                              :message (format nil "NIL used as an atom predicate")))
-                     (t (make-atom (make-pred-ref predicate)
+                     (t (make-atom (make-pred-ref predicate :cst predicate-cst)
                                    (mapcar (lambda (arg)
                                              (parse-term arg))
                                            args-cst)
