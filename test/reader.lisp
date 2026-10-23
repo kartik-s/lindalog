@@ -164,6 +164,10 @@
       (lindalog:read-program stream))))
 
 (test read-program-rejects-tilde-label
-  (signals lindalog:read-error
-    (with-input-from-string (stream "(deffact #~ )")
-      (lindalog:read-program stream))))
+  (handler-case
+      (progn
+        (with-input-from-string (stream "(deffact #~ )")
+          (lindalog:read-program stream))
+        (fail "expected a READ-ERROR"))
+    (lindalog:read-error (e)
+      (finishes (princ-to-string e)))))
