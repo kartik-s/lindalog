@@ -48,4 +48,5 @@ READ-ERROR if the program is malformed."
                :range (let ((begin (+ (eclector.base:stream-position e)
                                       (eclector.base:position-offset e))))
                         (cons begin (+ begin (eclector.base:range-length e))))
-               :format-control (princ-to-string e))))))
+               :format-control "~a"
+               :format-arguments (list (princ-to-string e)))))))

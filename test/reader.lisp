@@ -162,3 +162,8 @@
   (signals lindalog:read-error
     (with-input-from-string (stream "#1=(a . #1#)")
       (lindalog:read-program stream))))
+
+(test read-program-rejects-tilde-label
+  (signals lindalog:read-error
+    (with-input-from-string (stream "(deffact #~ )")
+      (lindalog:read-program stream))))
