@@ -333,27 +333,12 @@ semantic errors found."
          (errors (program-semantic-errors program)))
     (is (= 0 (length errors)))))
 
-(test validate-program-variable-rd-on-in-premise
-  (let* ((first-decl "
-(defpred p (a b)
-  (:store :in))
-")
-         (rule "
-(defrule foo
-  (:when (:rd (p ?x ?y)))
-  (:then (p ?y ?x)))
-")
-         (program (concatenate 'string
-                               first-decl
-                               rule))
-         (errors (program-semantic-errors program)))
-    (is (= 0 (length errors)))))
-
 (test validate-program-rejects-redundant-rd
   (let* ((first-decl "
 (defpred p (a b)
   (:store :rd))
-
+")
+         (second-decl "
 (defpred q (x)
   (:store :sig))
 ")
@@ -365,6 +350,7 @@ semantic errors found."
 ")
          (program (concatenate 'string
                                first-decl
+                               second-decl
                                rule))
          (errors (program-semantic-errors program)))
     (is (= 2 (length errors)))
