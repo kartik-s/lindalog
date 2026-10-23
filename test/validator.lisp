@@ -375,15 +375,15 @@ semantic errors found."
                    (covered-text (lindalog:semantic-error-ast e1) program)))
       (let ((related1 (lindalog:semantic-error-related e1)))
         (is (not (null related1)))
-        (string= (string-trim '(#\Newline) first-decl)
-                 (covered-text (car (first related1)) program)))
+        (is (string= (string-trim '(#\Newline) first-decl)
+                     (covered-text (car (first related1)) program))))
       (is (typep e2 'lindalog:redundant-rd))
       (is (string= "(:rd (q ?x))"
                    (covered-text (lindalog:semantic-error-ast e2) program)))
       (let ((related2 (lindalog:semantic-error-related e2)))
         (is (not (null related2)))
-        (string= (string-trim '(#\Newline) first-decl)
-                 (covered-text (car (first related2)) program))))))
+        (is (string= (string-trim '(#\Newline) second-decl)
+                     (covered-text (car (first related2)) program)))))))
 
 (test validate-program-rejects-errors-in-order
   (let* ((program "
