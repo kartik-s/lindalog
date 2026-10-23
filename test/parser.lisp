@@ -187,11 +187,12 @@
         (is (eq pred (lindalog:syntax-error-cst e)))))))
 
 (test parse-atom-error-message-names-culprit
-  (let ((culprit '?bad))
+  (let ((culprit 'lindalog-user::?bad))
     (handler-case
         (progn (lindalog:parse-atom (as-cst (list culprit 2))) nil)
       (lindalog:syntax-error (e)
-        (is (search (prin1-to-string culprit)
+        (is (search (let ((*package* (find-package '#:lindalog-user)))
+                      (write-to-string culprit :case :downcase))
                     (princ-to-string e)))))))
 
 ;;; PARSE-PREMISE
@@ -468,7 +469,7 @@
     (handler-case
         (progn (lindalog:parse-pred-decl (as-cst form)) nil)
       (lindalog:syntax-error (e)
-        (is (search ":BAR" (princ-to-string e)))))))
+        (is (search ":bar" (princ-to-string e)))))))
 
 ;;; PARSE-INIT-FACT
 
@@ -974,7 +975,7 @@
       (let ((syntax-error (first (lindalog:invalid-program-errors e))))
         (is (typep syntax-error 'lindalog:syntax-error))
         (is (equal '(28 . 32) (lindalog:source-error-range syntax-error)))
-        (is (search ":FOO" (princ-to-string syntax-error)))))))
+        (is (search ":foo" (princ-to-string syntax-error)))))))
 
 (test parse-program-rejects-multiple-syntax-errors
   (handler-case
@@ -1007,17 +1008,17 @@
         (is (equal '(28 . 32) (lindalog:source-error-range (first errors))))
         (is (equal '(98 . 100) (lindalog:source-error-range (second errors))))
         (is (equal '(106 . 136) (lindalog:source-error-range (third errors))))
-        (is (search ":FOO" (princ-to-string (first errors))))
-        (is (search "RD" (princ-to-string (second errors))))
+        (is (search ":foo" (princ-to-string (first errors))))
+        (is (search "rd" (princ-to-string (second errors))))
         (is (search ":when" (princ-to-string (third errors))))
-        (is (search ":FOO" (princ-to-string e)))
-        (is (search "RD" (princ-to-string e)))
+        (is (search ":foo" (princ-to-string e)))
+        (is (search "rd" (princ-to-string e)))
         (is (search ":when" (princ-to-string e)))))))
 
 (test parse-program-rejects-bad-cst-from-expression
   (handler-case
       (progn
-        (lindalog:parse-program (list (as-cst '(defpred p (rd b)
+        (lindalog:parse-program (list (as-cst '(defpred p (lindalog-user::rd b)
                                                 (:store :in)))))
         (fail "expected a PROGRAM-SYNTAX-ERRORS"))
     (lindalog:program-syntax-errors (e)
@@ -1025,7 +1026,7 @@
         (is (= 1 (length errors)))
         (is (typep (first errors) 'lindalog:syntax-error))
         (is (equal nil (lindalog:source-error-range (first errors))))
-        (is (string= "predicate argument is reserved: RD" (princ-to-string (first errors))))))))
+        (is (string= "predicate argument is reserved: rd" (princ-to-string (first errors))))))))
 
 (test parse-program-rejects-reader-error
   (signals lindalog:read-error

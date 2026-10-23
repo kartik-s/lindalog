@@ -16,7 +16,8 @@
        (error 'read-error
               :range (cons (- end (length token))
                            end)
-              :message (format nil "package syntax not allowed: ~a" token))))))
+              :format-control "package syntax not allowed: ~a"
+              :format-arguments (list token))))))
 
 (defmethod eclector.reader:note-labeled-object ((client lindalog-client) stream label parent)
   "Reject circular input."
@@ -25,7 +26,8 @@
     (error 'lindalog:read-error
            :range (cons (- end (length (format nil "~d" label)))
                         end)
-           :message (format nil "labels not allowed: #~d=" label))))
+           :format-control "labels not allowed: #~d="
+           :format-arguments (list label))))
 
 (defpackage #:lindalog-user
   (:use)
@@ -46,4 +48,4 @@ READ-ERROR if the program is malformed."
                :range (let ((begin (+ (eclector.base:stream-position e)
                                       (eclector.base:position-offset e))))
                         (cons begin (+ begin (eclector.base:range-length e))))
-               :message (princ-to-string e))))))
+               :format-control (princ-to-string e))))))

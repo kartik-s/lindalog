@@ -28,8 +28,8 @@ there are none."))
     (unless pred-decl
       (list (make-condition 'undeclared-predicate
                             :ast node
-                            :message (format nil "undeclared predicate ~a"
-                                             (pred-ref-name node)))))))
+                            :format-control "undeclared predicate ~a"
+                            :format-arguments (list (pred-ref-name node)))))))
 
 (defmethod validate ((node atom) env)
   (let ((pred-decl (lookup-pred-decl (atom-predicate node) env)))
@@ -40,10 +40,10 @@ there are none."))
                 (length (atom-args node))))
        (list (make-condition 'arity-mismatch
                              :ast node
-                             :message (format nil "~a takes ~d argument~:p, got ~d"
-                                              (pred-decl-name pred-decl)
-                                              (length (pred-decl-args pred-decl))
-                                              (length (atom-args node)))
+                             :format-control "~a takes ~d argument~:p, got ~d"
+                             :format-arguments (list (pred-decl-name pred-decl)
+                                                     (length (pred-decl-args pred-decl))
+                                                     (length (atom-args node)))
                              :related (list (cons pred-decl "declared here"))))))))
 
 (defmethod validate ((node pred-decl) env)
@@ -59,8 +59,8 @@ there are none."))
            :when (variable-p arg)
              :collect (make-condition 'variable-in-fact
                                       :ast arg
-                                      :message (format nil "expected ground term, got variable ~a"
-                                                       (variable-name arg)))))))
+                                      :format-control "expected ground term, got variable ~a"
+                                      :format-arguments (list (variable-name arg)))))))
 
 (defmethod validate ((node premise) env)
   (let* ((atom (premise-atom node))
@@ -72,8 +72,8 @@ there are none."))
                 (not (eq :in (pred-decl-store pred-decl))))
        (list (make-condition 'redundant-rd
                              :ast node
-                             :message (format nil "premise marked :rd, but predicate ~a is not :in"
-                                              (pred-decl-name pred-decl))
+                             :format-control "premise marked :rd, but predicate ~a is not :in"
+                             :format-arguments (list (pred-decl-name pred-decl))
                              :related (list (cons pred-decl "declared here"))))))))
 
 (defmethod validate ((node rule) env)
@@ -89,8 +89,8 @@ there are none."))
      (loop :for var :in unbound-vars
            :collect (make-condition 'unbound-variable
                                     :ast var
-                                    :message (format nil "unbound variable ~a"
-                                                     (variable-name var)))))))
+                                    :format-control "unbound variable ~a"
+                                    :format-arguments (list (variable-name var)))))))
 
 (defun validate-program (program)
   "Check PROGRAM for semantic errors, raising PROGRAM-SEMANTIC-ERRORS if
@@ -102,8 +102,8 @@ there are any, and returning PROGRAM if there are none."
             :if (gethash pred-name pred-table)
               :collect (make-condition 'duplicate-predicate
                                        :ast pred
-                                       :message (format nil "duplicate predicate ~a"
-                                                        pred-name)
+                                       :format-control "duplicate predicate ~a"
+                                       :format-arguments (list pred-name)
                                        :related (list (cons (gethash pred-name pred-table)
                                                             "declared here")))
                 :into duplicate-errors
@@ -120,8 +120,8 @@ there are any, and returning PROGRAM if there are none."
                   :if existing-rule
                     :collect (make-condition 'duplicate-rule
                                              :ast rule
-                                             :message (format nil "duplicate rule ~a"
-                                                              (rule-name rule))
+                                             :format-control "duplicate rule ~a"
+                                             :format-arguments (list (rule-name rule))
                                              :related (list (cons existing-rule "declared here")))
                   :else
                     :do (setf (gethash rule-name rule-set)

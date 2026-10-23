@@ -6,8 +6,10 @@
   ())
 
 (define-condition source-error (lindalog-error)
-  ((message :initarg :message
-            :reader source-error-message))
+  ((format-control :initarg :format-control
+                   :reader source-error-format-control)
+   (format-arguments :initarg :format-arguments
+                     :reader source-error-format-arguments))
   (:report (lambda (condition stream)
              (let ((range (source-error-range condition)))
                (when range
@@ -19,6 +21,13 @@
 
 (defgeneric source-error-range (condition)
   (:documentation "The (start . end) source range CONDITION refers to, or NIL."))
+
+(defun source-error-message (condition)
+  (let ((*package* (find-package '#:lindalog-user))
+        (*print-case* :downcase))
+    (apply #'format nil
+           (source-error-format-control condition)
+           (source-error-format-arguments condition))))
 
 (define-condition read-error (source-error)
   ((range :initarg :range
