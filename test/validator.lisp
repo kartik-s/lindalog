@@ -471,7 +471,7 @@ semantic errors found."
          (errors (validation-errors program)))
     (is (= 2 (length errors)))
     (let ((e1 (first errors))
-          (e2 (first errors)))
+          (e2 (second errors)))
       (is (typep e1 'lindalog:variable-in-fact))
       (is (string= "?x" (covered-text (lindalog:semantic-error-ast e1) program)))
       (is (typep e2 'lindalog:variable-in-fact))
