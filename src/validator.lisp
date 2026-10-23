@@ -3,7 +3,7 @@
 (in-package #:lindalog)
 
 (defstruct environment
-  (pred-decls (make-hash-table :test #'equal)
+  (pred-decls (make-hash-table)
    :type hash-table
    :read-only t))
 
@@ -103,6 +103,7 @@ there are any, and returning PROGRAM if there are none."
                  :if existing
                    :collect (make-condition condition-type
                                             :ast node
+                                            :format-arguments (list name)
                                             :related (list (cons existing "declared here")))
                      :into errors
                  :else
@@ -120,14 +121,14 @@ there are any, and returning PROGRAM if there are none."
              (preds-result (collect-errors (program-pred-decls program) env))
              (facts-result (collect-errors (program-init-facts program) env))
              (rules-result (collect-errors (program-rules program) env))
-             (errors (sort (append duplicate-pred-errors
-                                   duplicate-rule-errors
-                                   preds-result
-                                   facts-result
-                                   rules-result)
-                           #'<
-                           :key (lambda (e)
-                                  (car (source-error-range e))))))
+             (errors (stable-sort (append duplicate-pred-errors
+                                          duplicate-rule-errors
+                                          preds-result
+                                          facts-result
+                                          rules-result)
+                                  #'<
+                                  :key (lambda (e)
+                                         (or (car (source-error-range e)) 0)))))
         (if errors
             (error 'program-semantic-errors :errors errors)
             program)))))
