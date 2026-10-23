@@ -405,6 +405,7 @@ semantic errors found."
       (is (not (null related)))
       (is (string= "(defpred p (a b)
   (:store :in))" (covered-text (car (first related)) program))))
+    (is (search "p takes 2 arguments, got 1" (princ-to-string (first errors))))
 
     ;; 2. Arity mismatch (2)
     (is (typep (second errors) 'lindalog:arity-mismatch))
@@ -413,18 +414,22 @@ semantic errors found."
       (is (not (null related)))
       (is (string= "(defpred p (a b)
   (:store :in))" (covered-text (car (first related)) program))))
+    (is (search "p takes 2 arguments, got 3" (princ-to-string (second errors))))
 
     ;; 3. Unbound variable (1)
     (is (typep (third errors) 'lindalog:unbound-variable))
     (is (string= "?y" (covered-text (lindalog:semantic-error-ast (third errors)) program)))
+    (is (search "unbound variable ?y" (princ-to-string (third errors))))
 
     ;; 4. Unbound variable (2)
     (is (typep (fourth errors) 'lindalog:unbound-variable))
     (is (string= "?z" (covered-text (lindalog:semantic-error-ast (fourth errors)) program)))
+    (is (search "unbound variable ?z" (princ-to-string (fourth errors))))
 
     ;; 5. Non-ground fact
     (is (typep (fifth errors) 'lindalog:variable-in-fact))
     (is (string= "?a" (covered-text (lindalog:semantic-error-ast (fifth errors)) program)))
+    (is (search "expected ground term, got variable ?a" (princ-to-string (fifth errors))))
 
     ;; 6. Redundant :rd
     (is (typep (sixth errors) 'lindalog:redundant-rd))
@@ -433,10 +438,12 @@ semantic errors found."
       (is (not (null related)))
       (is (string= "(defpred q (x)
   (:store :rd))" (covered-text (car (first related)) program))))
+    (is (search "premise marked :rd, but predicate q is not :in" (princ-to-string (sixth errors))))
 
     ;; 7. Undeclared predicate
     (is (typep (seventh errors) 'lindalog:undeclared-predicate))
     (is (string= "r" (covered-text (lindalog:semantic-error-ast (seventh errors)) program)))
+    (is (search "undeclared predicate r" (princ-to-string (seventh errors))))
 
     ;; 8. Duplicate rule bar
     (is (typep (eighth errors) 'lindalog:duplicate-rule))
@@ -448,6 +455,7 @@ semantic errors found."
   (:when (:rd (q ?x))
          (r ?y))
   (:then (p ?x ?y)))" (covered-text (car (first related)) program))))
+    (is (search "duplicate rule bar" (princ-to-string (eighth errors))))
 
     ;; 9. Duplicate predicate p
     (is (typep (ninth errors) 'lindalog:duplicate-predicate))
@@ -456,7 +464,8 @@ semantic errors found."
     (let ((related (lindalog:semantic-error-related (ninth errors))))
       (is (not (null related)))
       (is (string= "(defpred p (a b)
-  (:store :in))" (covered-text (car (first related)) program))))))
+  (:store :in))" (covered-text (car (first related)) program))))
+    (is (search "duplicate predicate p" (princ-to-string (ninth errors))))))
 
 (test validate-program-rejects-duplicate-variable-in-init-fact
   (let* ((first-decl "
