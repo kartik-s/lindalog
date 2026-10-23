@@ -132,11 +132,14 @@ there are any, and returning PROGRAM if there are none."
         (let* ((preds-result (collect-errors (program-pred-decls program)))
                (facts-result (collect-errors (program-init-facts program)))
                (rules-result (collect-errors (program-rules program)))
-               (errors (append duplicate-pred-errors
-                               duplicate-rule-errors
-                               preds-result
-                               facts-result
-                               rules-result)))
+               (errors (sort (append duplicate-pred-errors
+                                     duplicate-rule-errors
+                                     preds-result
+                                     facts-result
+                                     rules-result)
+                             #'<
+                             :key (lambda (e)
+                                    (car (source-error-range e))))))
           (if errors
               (error 'program-semantic-errors :errors errors)
               program))))))
