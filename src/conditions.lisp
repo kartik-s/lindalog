@@ -30,15 +30,16 @@
 
 (define-condition syntax-error (source-error)
   ((cst :initarg :cst
-        :initform nil
+        :initform (error "SYNTAX-ERROR requires a CST")
         :reader syntax-error-cst)))
 
 (defmethod source-error-range ((condition syntax-error))
-  (cst:source (syntax-error-cst condition)))
+  (let ((cst (syntax-error-cst condition)))
+    (when cst (cst:source cst))))
 
 (define-condition semantic-error (source-error)
   ((ast :initarg :ast
-        :initform nil
+        :initform (error "SEMANTIC-ERROR requires an AST")
         :reader semantic-error-ast)
    (related :initarg :related
             :initform nil
@@ -46,7 +47,8 @@
             :documentation "A list of (NODE . NOTE) pairs for other relevant locations.")))
 
 (defmethod source-error-range ((condition semantic-error))
-  (cst:source (ast-node-cst (semantic-error-ast condition))))
+  (let ((cst (ast-node-cst (semantic-error-ast condition))))
+    (when cst (cst:source cst))))
 
 (define-condition undeclared-predicate (semantic-error)
   ())
