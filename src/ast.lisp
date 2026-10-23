@@ -169,7 +169,7 @@ the same quantity."
                    (program-rules a)
                    (program-rules b)))))
 
-(defgeneric variables-in(node)
+(defgeneric variables-in (node)
   (:documentation "Collect the variables contained in NODE."))
 
 (defmethod variables-in ((node constant))
@@ -220,3 +220,18 @@ the same quantity."
          :append (variables-in node))
    :test #'ast-equal-p
    :from-end t))
+
+(defgeneric ast-node-name (node)
+  (:documentation "Get the name associated with NODE as a symbol."))
+
+(defmethod ast-node-name ((node variable))
+  (variable-name node))
+
+(defmethod ast-node-name ((node pred-ref))
+  (pred-ref-name node))
+
+(defmethod ast-node-name ((node pred-decl))
+  (pred-decl-name node))
+
+(defmethod ast-node-name ((node rule))
+  (rule-name node))

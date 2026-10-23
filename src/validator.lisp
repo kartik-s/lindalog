@@ -8,7 +8,7 @@
    :read-only t))
 
 (defun lookup-pred-decl (pred-ref env)
-  (gethash (symbol-name (pred-ref-name pred-ref))
+  (gethash (pred-ref-name pred-ref)
            (environment-pred-decls env)))
 
 (defgeneric validate (node env)
@@ -95,51 +95,39 @@ there are none."))
 (defun validate-program (program)
   "Check PROGRAM for semantic errors, raising PROGRAM-SEMANTIC-ERRORS if
 there are any, and returning PROGRAM if there are none."
-  (multiple-value-bind (env duplicate-pred-errors)
-      (loop :with pred-table := (make-hash-table :test #'equal)
-            :for pred :in (program-pred-decls program)
-            :for pred-name := (symbol-name (pred-decl-name pred))
-            :if (gethash pred-name pred-table)
-              :collect (make-condition 'duplicate-predicate
-                                       :ast pred
-                                       :format-control "duplicate predicate ~a"
-                                       :format-arguments (list pred-name)
-                                       :related (list (cons (gethash pred-name pred-table)
-                                                            "declared here")))
-                :into duplicate-errors
-            :else
-              :do (setf (gethash pred-name pred-table)
-                        pred)
-            :finally (return (values (make-environment :pred-decls pred-table)
-                                     duplicate-errors)))
-    (let ((duplicate-rule-errors
-            (loop :with rule-set := (make-hash-table :test #'equal)
-                  :for rule :in (program-rules program)
-                  :for rule-name := (symbol-name (rule-name rule))
-                  :for existing-rule := (gethash rule-name rule-set)
-                  :if existing-rule
-                    :collect (make-condition 'duplicate-rule
-                                             :ast rule
-                                             :format-control "duplicate rule ~a"
-                                             :format-arguments (list (rule-name rule))
-                                             :related (list (cons existing-rule "declared here")))
-                  :else
-                    :do (setf (gethash rule-name rule-set)
-                              rule))))
-      (flet ((collect-errors (nodes)
-               (loop :for node :in nodes
-                     :append (validate node env))))
-        (let* ((preds-result (collect-errors (program-pred-decls program)))
-               (facts-result (collect-errors (program-init-facts program)))
-               (rules-result (collect-errors (program-rules program)))
-               (errors (sort (append duplicate-pred-errors
-                                     duplicate-rule-errors
-                                     preds-result
-                                     facts-result
-                                     rules-result)
-                             #'<
-                             :key (lambda (e)
-                                    (car (source-error-range e))))))
-          (if errors
-              (error 'program-semantic-errors :errors errors)
-              program))))))
+  (flet ((collect-duplicates (nodes condition-type)
+           (loop :with table := (make-hash-table)
+                 :for node :in nodes
+                 :for name := (ast-node-name node)
+                 :for existing := (gethash name table)
+                 :if existing
+                   :collect (make-condition condition-type
+                                            :ast node
+                                            :related (list (cons existing "declared here")))
+                     :into errors
+                 :else
+                   :do (setf (gethash name table) node)
+                 :finally (return (values errors table))))
+         (collect-errors (nodes env)
+           (loop :for node :in nodes
+                 :append (validate node env))))
+    (multiple-value-bind (duplicate-pred-errors pred-table)
+        (collect-duplicates (program-pred-decls program)
+                            'duplicate-predicate)
+      (let* ((env (make-environment :pred-decls pred-table))
+             (duplicate-rule-errors (collect-duplicates (program-rules program)
+                                                        'duplicate-rule))
+             (preds-result (collect-errors (program-pred-decls program) env))
+             (facts-result (collect-errors (program-init-facts program) env))
+             (rules-result (collect-errors (program-rules program) env))
+             (errors (sort (append duplicate-pred-errors
+                                   duplicate-rule-errors
+                                   preds-result
+                                   facts-result
+                                   rules-result)
+                           #'<
+                           :key (lambda (e)
+                                  (car (source-error-range e))))))
+        (if errors
+            (error 'program-semantic-errors :errors errors)
+            program)))))

@@ -77,10 +77,12 @@
   ())
 
 (define-condition duplicate-predicate (semantic-error)
-  ())
+  ()
+  (:default-initargs :format-control "duplicate predicate ~a"))
 
 (define-condition duplicate-rule (semantic-error)
-  ())
+  ()
+  (:default-initargs :format-control "duplicate rule ~a"))
 
 (define-condition invalid-program (lindalog-error)
   ((errors :initarg :errors
