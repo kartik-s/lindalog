@@ -32,7 +32,7 @@
              (lindalog:read-program stream))))
       (is (eq program (lindalog:validate-program program))))))
 
-(defun program-semantic-errors (s)
+(defun validation-errors (s)
   "Read, parse, and validate the program S, returning a list of the
 semantic errors found."
   (handler-case
@@ -64,7 +64,7 @@ semantic errors found."
          (program (concatenate 'string
                                first-decl
                                second-decl))
-         (errors (program-semantic-errors program)))
+         (errors (validation-errors program)))
     (is (= 1 (length errors)))
     (let ((e1 (first errors)))
       (is (typep e1 'lindalog:duplicate-predicate))
@@ -94,7 +94,7 @@ semantic errors found."
                                first-decl
                                second-decl
                                third-decl))
-         (errors (program-semantic-errors program)))
+         (errors (validation-errors program)))
     (is (= 1 (length errors)))
     (let ((e1 (first errors)))
       (is (typep e1 'lindalog:duplicate-rule))
@@ -122,7 +122,7 @@ semantic errors found."
                                first-decl
                                second-decl
                                third-decl))
-         (errors (program-semantic-errors program)))
+         (errors (validation-errors program)))
     (is (= 2 (length errors)))
     (let ((e1 (first errors))
           (e2 (second errors)))
@@ -157,7 +157,7 @@ semantic errors found."
                                first-decl
                                second-decl
                                fact))
-         (errors (program-semantic-errors program)))
+         (errors (validation-errors program)))
     (is (= 1 (length errors)))
     (let ((e1 (first errors)))
       (is (typep e1 'lindalog:duplicate-predicate))
@@ -175,7 +175,7 @@ semantic errors found."
          (program (concatenate 'string
                                first-decl
                                fact))
-         (errors (program-semantic-errors program)))
+         (errors (validation-errors program)))
     (is (= 1 (length errors)))
     (let ((e1 (first errors)))
       (is (typep e1 'lindalog:undeclared-predicate))
@@ -195,7 +195,7 @@ semantic errors found."
          (program (concatenate 'string
                                first-decl
                                rule))
-         (errors (program-semantic-errors program)))
+         (errors (validation-errors program)))
     (is (= 2 (length errors)))
     (let ((e1 (first errors))
           (e2 (second errors)))
@@ -231,7 +231,7 @@ semantic errors found."
                                first-decl
                                second-decl
                                rule))
-         (errors (program-semantic-errors program)))
+         (errors (validation-errors program)))
     (is (= 0 (length errors)))))
 
 (test validate-program-rejects-non-ground-fact
@@ -245,7 +245,7 @@ semantic errors found."
          (program (concatenate 'string
                                first-decl
                                fact))
-         (errors (program-semantic-errors program)))
+         (errors (validation-errors program)))
     (is (= 2 (length errors)))
     (let ((e1 (first errors))
           (e2 (second errors)))
@@ -267,7 +267,7 @@ semantic errors found."
          (program (concatenate 'string
                                first-decl
                                rule))
-         (errors (program-semantic-errors program)))
+         (errors (validation-errors program)))
     (is (= 1 (length errors)))
     (let ((e1 (first errors)))
       (is (typep e1 'lindalog:unbound-variable))
@@ -286,7 +286,7 @@ semantic errors found."
          (program (concatenate 'string
                                first-decl
                                rule))
-         (errors (program-semantic-errors program)))
+         (errors (validation-errors program)))
     (is (= 1 (length errors)))
     (let ((e1 (first errors)))
       (is (typep e1 'lindalog:unbound-variable))
@@ -305,7 +305,7 @@ semantic errors found."
          (program (concatenate 'string
                                first-decl
                                rule))
-         (errors (program-semantic-errors program)))
+         (errors (validation-errors program)))
     (is (= 3 (length errors)))
     (let ((e1 (first errors))
           (e2 (second errors))
@@ -330,7 +330,7 @@ semantic errors found."
          (program (concatenate 'string
                                first-decl
                                rule))
-         (errors (program-semantic-errors program)))
+         (errors (validation-errors program)))
     (is (= 0 (length errors)))))
 
 (test validate-program-rejects-redundant-rd
@@ -352,7 +352,7 @@ semantic errors found."
                                first-decl
                                second-decl
                                rule))
-         (errors (program-semantic-errors program)))
+         (errors (validation-errors program)))
     (is (= 2 (length errors)))
     (let ((e1 (first errors))
           (e2 (second errors)))
@@ -396,7 +396,7 @@ semantic errors found."
 (defpred p (x)
   (:store :rd))
 ")
-         (errors (program-semantic-errors program)))
+         (errors (validation-errors program)))
     (is (= 9 (length errors)))
     ;; 1. Duplicate predicate p
     (is (typep (first errors) 'lindalog:duplicate-predicate))
