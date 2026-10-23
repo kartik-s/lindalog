@@ -7,8 +7,10 @@
 
 (define-condition source-error (lindalog-error)
   ((format-control :initarg :format-control
+                   :initform ""
                    :reader source-error-format-control)
    (format-arguments :initarg :format-arguments
+                     :initform nil
                      :reader source-error-format-arguments))
   (:report (lambda (condition stream)
              (let ((range (source-error-range condition)))
