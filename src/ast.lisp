@@ -213,7 +213,7 @@ the same quantity."
    :test #'ast-equal-p
    :from-end t))
 
-(defmethod collect-variables (nodes)
+(defun collect-variables (nodes)
   "Collect the variables in each node in NODES."
   (remove-duplicates
    (loop :for node :in nodes

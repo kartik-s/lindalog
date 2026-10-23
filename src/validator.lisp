@@ -16,11 +16,11 @@
 there are none."))
 
 (defmethod validate ((node constant) env)
-  "All constant checks are syntacitc, so always return NIL."
+  "All constant checks are syntactic, so always return NIL."
   nil)
 
 (defmethod validate ((node variable) env)
-  "All variable checks are syntacitc, so always return NIL."
+  "All variable checks are syntactic, so always return NIL."
   nil)
 
 (defmethod validate ((node pred-ref) env)
@@ -86,12 +86,11 @@ there are none."))
           (unbound-vars (remove-if (lambda (var)
                                      (member var lhs-vars :test #'ast-equal-p))
                                    (collect-variables (rule-rhs node)))))
-     (when unbound-vars
-       (loop :for var :in unbound-vars
-             :collect (make-condition 'unbound-variable
-                                      :ast var
-                                      :message (format nil "unbound variable ~a"
-                                                       (variable-name var))))))))
+     (loop :for var :in unbound-vars
+           :collect (make-condition 'unbound-variable
+                                    :ast var
+                                    :message (format nil "unbound variable ~a"
+                                                     (variable-name var)))))))
 
 (defun validate-program (program)
   "Check PROGRAM for semantic errors, raising PROGRAM-SEMANTIC-ERRORS if
@@ -106,7 +105,7 @@ there are any, and returning PROGRAM if there are none."
                                        :message (format nil "duplicate predicate ~a"
                                                         pred-name)
                                        :related (list (cons (gethash pred-name pred-table)
-                                                            "first declared here")))
+                                                            "declared here")))
                 :into duplicate-errors
             :else
               :do (setf (gethash pred-name pred-table)
