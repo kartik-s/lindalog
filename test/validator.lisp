@@ -456,3 +456,23 @@ semantic errors found."
     ;; 9. Undeclared predicate
     (is (typep (ninth errors) 'lindalog:undeclared-predicate))
     (is (string= "r" (covered-text (lindalog:semantic-error-ast (ninth errors)) program)))))
+
+(test validate-program-rejects-duplicate-variable-in-init-fact
+  (let* ((first-decl "
+(defpred p (a b c)
+  (:store :in))
+")
+         (fact "
+(deffact (p ?x 2 ?x))
+")
+         (program (concatenate 'string
+                               first-decl
+                               fact))
+         (errors (validation-errors program)))
+    (is (= 2 (length errors)))
+    (let ((e1 (first errors))
+          (e2 (first errors)))
+      (is (typep e1 'lindalog:variable-in-fact))
+      (is (string= "?x" (covered-text (lindalog:semantic-error-ast e1) program)))
+      (is (typep e2 'lindalog:variable-in-fact))
+      (is (string= "?x" (covered-text (lindalog:semantic-error-ast e2) program))))))
