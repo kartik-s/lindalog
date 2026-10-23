@@ -475,4 +475,6 @@ semantic errors found."
       (is (typep e1 'lindalog:variable-in-fact))
       (is (string= "?x" (covered-text (lindalog:semantic-error-ast e1) program)))
       (is (typep e2 'lindalog:variable-in-fact))
-      (is (string= "?x" (covered-text (lindalog:semantic-error-ast e2) program))))))
+      (is (string= "?x" (covered-text (lindalog:semantic-error-ast e2) program)))
+      (is (not (equal (cst:source (lindalog:ast-node-cst (lindalog:semantic-error-ast e1)))
+                      (cst:source (lindalog:ast-node-cst (lindalog:semantic-error-ast e2)))))))))
