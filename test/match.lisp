@@ -222,70 +222,78 @@
 
 ;;; MATCH-PREMISES
 
-(defun make-test-database (predicate-scs atoms)
-  (let ((database (lindalog:make-database)))
-    (dolist (pair predicate-scs)
-      (lindalog::add-predicate (car pair) (cdr pair) database))
-    (dolist (atom atoms)
-      (lindalog::add-fact atom
-                          (cdr (assoc (lindalog:pred-ref-name (lindalog:atom-predicate atom))
-                                      predicate-scs))
-                          database))
-    database))
+(defun make-test-image (s)
+  (with-input-from-string (stream s)
+    (let ((program (lindalog:parse-program
+                     (lindalog:read-program stream))))
+      (lindalog:make-image program))))
 
 (test match-premises-empty-premises-succeeds
   (let* ((database (lindalog::make-database))
          (match (lindalog::make-match))
-         (new-match (lindalog::match-premises nil database match)))
+         (new-match (lindalog::match-premises nil database nil match (constantly t))))
     (is (eq lindalog::+no-bindings+
             (lindalog::match-bindings new-match)))))
 
 (test match-premises-one-premise-succeeds
-  (let ((database (make-test-database
-                   '((p . :rd))
-                   (list (lindalog:make-atom (lindalog:make-pred-ref 'p)
-                                             (list (lindalog:make-constant 'a))))))
+  (let ((image (make-test-image "
+(defpred p (a)
+  (:store :rd))
+
+(deffact (p a))
+"))
         (premise (lindalog:make-premise
-                  (lindalog:make-atom (lindalog:make-pred-ref 'p)
-                                      (list (lindalog:make-variable 'x)))
-                  t)))
-    (is (lindalog::bindings-equal-p (list (cons (lindalog:make-variable 'x)
+                  (lindalog:make-atom (lindalog:make-pred-ref 'lindalog-user::p)
+                                      (list (lindalog:make-variable '?x)))
+                  nil)))
+    (is (lindalog::bindings-equal-p (list (cons (lindalog:make-variable '?x)
                                                 (lindalog:make-constant 'a)))
                                     (lindalog::match-bindings
                                      (lindalog::match-premises
                                       (list premise)
-                                      database
-                                      (lindalog::make-match)))))))
+                                      (lindalog:image-database image)
+                                      (lindalog:executable-env
+                                       (lindalog:image-executable image))
+                                      (lindalog::make-match)
+                                      (constantly t)))))))
 
 (test match-premises-one-premise-fails
-  (let ((database (make-test-database
-                   '((q . :rd))
-                   (list (lindalog:make-atom (lindalog:make-pred-ref 'q)
-                                             (list (lindalog:make-constant 'a))))))
+  (let ((image (make-test-image "
+(defpred q (a)
+  (:store :rd))
+
+(deffact (q a))
+"))
         (premise (lindalog:make-premise
-                  (lindalog:make-atom (lindalog:make-pred-ref 'p)
+                  (lindalog:make-atom (lindalog:make-pred-ref 'lindalog-user::p)
                                       (list (lindalog:make-variable 'x)))
                   t)))
     (is (eq lindalog::+match-fail+
             (lindalog::match-premises
              (list premise)
-             database
-             (lindalog::make-match))))))
+             (lindalog:image-database image)
+             (lindalog:executable-env
+              (lindalog:image-executable image))
+             (lindalog::make-match)
+             (constantly t))))))
 
 (test match-premises-shared-variable-succeeds
-  (let ((database (make-test-database
-                   '((p . :rd)
-                     (q . :rd))
-                   (list (lindalog:make-atom (lindalog:make-pred-ref 'p)
-                                             (list (lindalog:make-constant 'a)))
-                         (lindalog:make-atom (lindalog:make-pred-ref 'q)
-                                             (list (lindalog:make-constant 'a))))))
+  (let ((image (make-test-image "
+(defpred p (a)
+  (:store :rd))
+
+(defpred q (a)
+  (:store :rd))
+
+(deffact (p a))
+(deffact (q a))
+"))
         (premises (list (lindalog:make-premise
-                         (lindalog:make-atom (lindalog:make-pred-ref 'p)
+                         (lindalog:make-atom (lindalog:make-pred-ref 'lindalog-user::p)
                                              (list (lindalog:make-variable 'x)))
                          t)
                         (lindalog:make-premise
-                         (lindalog:make-atom (lindalog:make-pred-ref 'q)
+                         (lindalog:make-atom (lindalog:make-pred-ref 'lindalog-user::q)
                                              (list (lindalog:make-variable 'x)))
                          t))))
     (is (lindalog::bindings-equal-p (list (cons (lindalog:make-variable 'x)
@@ -293,47 +301,58 @@
                                     (lindalog::match-bindings
                                      (lindalog::match-premises
                                       premises
-                                      database
-                                      (lindalog::make-match)))))))
+                                      (lindalog:image-database image)
+                                      (lindalog:executable-env
+                                       (lindalog:image-executable image))
+                                      (lindalog::make-match)
+                                      (constantly t)))))))
 
 (test match-premises-shared-variable-inconsistent-fails
-  (let ((database (make-test-database
-                   '((p . :rd)
-                     (q . :rd))
-                   (list (lindalog:make-atom (lindalog:make-pred-ref 'p)
-                                             (list (lindalog:make-constant 'a)))
-                         (lindalog:make-atom (lindalog:make-pred-ref 'q)
-                                             (list (lindalog:make-constant 'b))))))
+  (let ((image (make-test-image "
+(defpred p (a)
+  (:store :rd))
+
+(defpred q (a)
+  (:store :rd))
+
+(deffact (p a))
+(deffact (q b))
+"))
         (premises (list (lindalog:make-premise
-                         (lindalog:make-atom (lindalog:make-pred-ref 'p)
+                         (lindalog:make-atom (lindalog:make-pred-ref 'lindalog-user::p)
                                              (list (lindalog:make-variable 'x)))
                          t)
                         (lindalog:make-premise
-                         (lindalog:make-atom (lindalog:make-pred-ref 'q)
+                         (lindalog:make-atom (lindalog:make-pred-ref 'lindalog-user::q)
                                              (list (lindalog:make-variable 'x)))
                          t))))
     (is (eq lindalog::+match-fail+
             (lindalog::match-premises
              premises
-             database
-             (lindalog::make-match))))))
+             (lindalog:image-database image)
+             (lindalog:executable-env
+              (lindalog:image-executable image))
+             (lindalog::make-match)
+             (constantly t))))))
 
 (test match-premises-backtracks-to-earlier-premise
-  (let ((database (make-test-database
-                   '((p . :in)
-                     (q . :in))
-                   (list (lindalog:make-atom (lindalog:make-pred-ref 'p)
-                                             (list (lindalog:make-constant 'a)))
-                         (lindalog:make-atom (lindalog:make-pred-ref 'p)
-                                             (list (lindalog:make-constant 'b)))
-                         (lindalog:make-atom (lindalog:make-pred-ref 'q)
-                                             (list (lindalog:make-constant 'b))))))
+  (let ((image (make-test-image "
+(defpred p (a)
+  (:store :in))
+
+(defpred q (a)
+  (:store :in))
+
+(deffact (p a))
+(deffact (p b))
+(deffact (q b))
+"))
         (premises (list (lindalog:make-premise
-                         (lindalog:make-atom (lindalog:make-pred-ref 'p)
+                         (lindalog:make-atom (lindalog:make-pred-ref 'lindalog-user::p)
                                              (list (lindalog:make-variable 'x)))
                          t)
                         (lindalog:make-premise
-                         (lindalog:make-atom (lindalog:make-pred-ref 'q)
+                         (lindalog:make-atom (lindalog:make-pred-ref 'lindalog-user::q)
                                              (list (lindalog:make-variable 'x)))
                          t))))
     (is (lindalog::bindings-equal-p (list (cons (lindalog:make-variable 'x)
@@ -341,17 +360,24 @@
                                     (lindalog::match-bindings
                                      (lindalog::match-premises
                                       premises
-                                      database
-                                      (lindalog::make-match)))))))
+                                      (lindalog:image-database image)
+                                      (lindalog:executable-env
+                                       (lindalog:image-executable image))
+                                      (lindalog::make-match)
+                                      (constantly t)))))))
 
 (test match-premises-preserves-existing-bindings
-  (let ((database (make-test-database
-                   '((p . :in)
-                     (q . :in))
-                   (list (lindalog:make-atom (lindalog:make-pred-ref 'p)
-                                             (list (lindalog:make-constant 'a))))))
+  (let ((image (make-test-image "
+(defpred p (a)
+  (:store :in))
+
+(defpred q (a)
+  (:store :in))
+
+(deffact (p a))
+"))
         (premises (list (lindalog:make-premise
-                         (lindalog:make-atom (lindalog:make-pred-ref 'p)
+                         (lindalog:make-atom (lindalog:make-pred-ref 'lindalog-user::p)
                                              (list (lindalog:make-variable 'x)))
                          t)))
         (match (lindalog::extend-match-bindings (lindalog::make-match)
@@ -362,14 +388,19 @@
                                     (lindalog::match-bindings
                                      (lindalog::match-premises
                                       premises
-                                      database
-                                      match))))))
+                                      (lindalog:image-database image)
+                                      (lindalog:executable-env
+                                       (lindalog:image-executable image))
+                                      match
+                                      (constantly t)))))))
 
 (test match-premises-inconsistent-existing-binding-fails
-  (let ((database (make-test-database
-                   '((p . :in))
-                   (list (lindalog:make-atom (lindalog:make-pred-ref 'p)
-                                             (list (lindalog:make-constant 'a))))))
+  (let ((image (make-test-image "
+(defpred p (a)
+  (:store :in))
+
+(deffact (p a))
+"))
         (premises (list (lindalog:make-premise
                          (lindalog:make-atom (lindalog:make-pred-ref 'p)
                                              (list (lindalog:make-variable 'x)))
@@ -380,170 +411,215 @@
     (is (eq lindalog::+match-fail+
             (lindalog::match-premises
              premises
-             database
-             match)))))
+             (lindalog:image-database image)
+             (lindalog:executable-env
+              (lindalog:image-executable image))
+             match
+             (constantly t))))))
 
 (test match-premises-consuming-in-premise-records-consumed-fact
-  (let* ((a (lindalog:make-atom (lindalog:make-pred-ref 'p)
+  (let* ((a (lindalog:make-atom (lindalog:make-pred-ref 'lindalog-user::p)
                                 (list (lindalog:make-constant 'a))))
-         (database (make-test-database
-                   '((p . :in))
-                   (list a)))
+         (image (make-test-image "
+(defpred p (a)
+  (:store :in))
+
+(deffact (p a))
+"))
          (premise (lindalog:make-premise
-                   (lindalog:make-atom (lindalog:make-pred-ref 'p)
+                   (lindalog:make-atom (lindalog:make-pred-ref 'lindalog-user::p)
                                        (list (lindalog:make-variable 'x)))
                    nil)))
     (is (member a
                 (lindalog::match-consumed-facts
                  (lindalog::match-premises
                   (list premise)
-                  database
-                  (lindalog::make-match)))
+                  (lindalog:image-database image)
+                  (lindalog:executable-env
+                   (lindalog:image-executable image))
+                  (lindalog::make-match)
+                  (constantly t)))
                 :key #'lindalog::fact-atom
                 :test #'lindalog:ast-equal-p))))
 
 (test match-premises-read-only-in-premise-records-read-fact
-  (let* ((a (lindalog:make-atom (lindalog:make-pred-ref 'p)
+  (let* ((a (lindalog:make-atom (lindalog:make-pred-ref 'lindalog-user::p)
                                 (list (lindalog:make-constant 'a))))
-         (database (make-test-database
-                   '((p . :in))
-                   (list a)))
+         (image (make-test-image "
+(defpred p (a)
+  (:store :in))
+
+(deffact (p a))
+"))
          (premise (lindalog:make-premise
-                   (lindalog:make-atom (lindalog:make-pred-ref 'p)
+                   (lindalog:make-atom (lindalog:make-pred-ref 'lindalog-user::p)
                                        (list (lindalog:make-variable 'x)))
                    t)))
     (is (member a
                 (lindalog::match-read-facts
                  (lindalog::match-premises
                   (list premise)
-                  database
-                  (lindalog::make-match)))
+                  (lindalog:image-database image)
+                  (lindalog:executable-env
+                   (lindalog:image-executable image))
+                  (lindalog::make-match)
+                  (constantly t)))
                 :key #'lindalog::fact-atom
                 :test #'lindalog:ast-equal-p))))
 
 (test match-premises-rd-premise-records-read-fact
-  (let* ((a (lindalog:make-atom (lindalog:make-pred-ref 'p)
+  (let* ((a (lindalog:make-atom (lindalog:make-pred-ref 'lindalog-user::p)
                                 (list (lindalog:make-constant 'a))))
-         (database (make-test-database
-                   '((p . :rd))
-                   (list a)))
+         (image (make-test-image "
+(defpred p (a)
+  (:store :rd))
+
+(deffact (p a))
+"))
          (premise (lindalog:make-premise
-                   (lindalog:make-atom (lindalog:make-pred-ref 'p)
+                   (lindalog:make-atom (lindalog:make-pred-ref 'lindalog-user::p)
                                        (list (lindalog:make-variable 'x)))
                    t)))
     (is (member a
                 (lindalog::match-read-facts
                  (lindalog::match-premises
                   (list premise)
-                  database
-                  (lindalog::make-match)))
+                  (lindalog:image-database image)
+                  (lindalog:executable-env
+                   (lindalog:image-executable image))
+                  (lindalog::make-match)
+                  (constantly t)))
                 :key #'lindalog::fact-atom
                 :test #'lindalog:ast-equal-p))))
 
 (test match-premises-sig-premise-records-read-fact
-  (let* ((a (lindalog:make-atom (lindalog:make-pred-ref 'p)
+  (let* ((a (lindalog:make-atom (lindalog:make-pred-ref 'lindalog-user::p)
                                 (list (lindalog:make-constant 'a))))
-         (database (make-test-database
-                   '((p . :sig))
-                   (list a)))
+         (image (make-test-image "
+(defpred p (a)
+  (:store :sig))
+
+(deffact (p a))
+"))
          (premise (lindalog:make-premise
-                   (lindalog:make-atom (lindalog:make-pred-ref 'p)
+                   (lindalog:make-atom (lindalog:make-pred-ref 'lindalog-user::p)
                                        (list (lindalog:make-variable 'x)))
                    t)))
     (is (member a
                 (lindalog::match-read-facts
                  (lindalog::match-premises
                   (list premise)
-                  database
-                  (lindalog::make-match)))
+                  (lindalog:image-database image)
+                  (lindalog:executable-env
+                   (lindalog:image-executable image))
+                  (lindalog::make-match)
+                  (constantly t)))
                 :key #'lindalog::fact-atom
                 :test #'lindalog:ast-equal-p))))
 
 (test match-premises-two-consuming-premises-cannot-reuse-fact
-  (let ((database (make-test-database
-                   '((p . :in))
-                   (list (lindalog:make-atom (lindalog:make-pred-ref 'p)
-                                             (list (lindalog:make-constant 'a))))))
+  (let ((image (make-test-image "
+(defpred p (a)
+  (:store :in))
+
+(deffact (p a))
+"))
         (premises (list (lindalog:make-premise
-                         (lindalog:make-atom (lindalog:make-pred-ref 'p)
+                         (lindalog:make-atom (lindalog:make-pred-ref 'lindalog-user::p)
                                              (list (lindalog:make-variable 'x)))
                          nil)
                         (lindalog:make-premise
-                         (lindalog:make-atom (lindalog:make-pred-ref 'p)
+                         (lindalog:make-atom (lindalog:make-pred-ref 'lindalog-user::p)
                                              (list (lindalog:make-variable 'x)))
                          nil))))
     (is (eq lindalog::+match-fail+
             (lindalog::match-premises
              premises
-             database
-             (lindalog::make-match))))))
+             (lindalog:image-database image)
+             (lindalog:executable-env
+              (lindalog:image-executable image))
+             (lindalog::make-match)
+             (constantly t))))))
 
 (test match-premises-two-consuming-premises-can-use-distinct-equal-facts
   (let* ((a (lindalog:make-atom (lindalog:make-pred-ref 'p)
                                 (list (lindalog:make-constant 'a))))
-         (database (make-test-database
-                    '((p . :in))
-                    (list a a)))
+         (image (make-test-image "
+(defpred p (a)
+  (:store :in))
+
+(deffact (p a))
+(deffact (p a))
+"))
          (premises (list (lindalog:make-premise
-                          (lindalog:make-atom (lindalog:make-pred-ref 'p)
+                          (lindalog:make-atom (lindalog:make-pred-ref 'lindalog-user::p)
                                               (list (lindalog:make-variable 'x)))
                           nil)
                          (lindalog:make-premise
-                          (lindalog:make-atom (lindalog:make-pred-ref 'p)
+                          (lindalog:make-atom (lindalog:make-pred-ref 'lindalog-user::p)
                                               (list (lindalog:make-variable 'x)))
                           nil))))
     (is (= 2 (count a
                     (lindalog::match-consumed-facts
                      (lindalog::match-premises
                       premises
-                      database
-                      (lindalog::make-match)))
+                      (lindalog:image-database image)
+                      (lindalog:executable-env
+                       (lindalog:image-executable image))
+                      (lindalog::make-match)
+                      (constantly t)))
                     :key #'lindalog::fact-atom
                     :test #'lindalog:ast-equal-p)))))
 
 (test match-premises-rejected-match-fails
-  (let ((database (make-test-database
-                   '((p . :rd))
-                   (list (lindalog:make-atom (lindalog:make-pred-ref 'p)
-                                             (list (lindalog:make-constant 'a))))))
+  (let ((image (make-test-image "
+(defpred p (a)
+  (:store :rd))
+
+(deffact (p a))
+"))
         (premise (lindalog:make-premise
-                  (lindalog:make-atom (lindalog:make-pred-ref 'p)
+                  (lindalog:make-atom (lindalog:make-pred-ref 'lindalog-user::p)
                                       (list (lindalog:make-variable 'x)))
                   t)))
     (is (eq lindalog::+match-fail+
             (lindalog::match-premises
              (list premise)
-             database
+             (lindalog:image-database image)
+             (lindalog:executable-env
+              (lindalog:image-executable image))
              (lindalog::make-match)
              (constantly nil))))))
 
 (test match-premises-backtracks-after-rejected-match
-  (let* ((b (lindalog:make-atom (lindalog:make-pred-ref 'p)
-                                (list (lindalog:make-constant 'b))))
-         (database (make-test-database
-                    '((p . :in))
-                    (list
-                     (lindalog:make-atom (lindalog:make-pred-ref 'p)
-                                         (list (lindalog:make-constant 'a)))
-                     b
-                     (lindalog:make-atom (lindalog:make-pred-ref 'p)
-                                         (list (lindalog:make-constant 'c))))))
+  (let* ((b (lindalog:make-atom (lindalog:make-pred-ref 'lindalog-user::p)
+                                (list (lindalog:make-constant 'lindalog-user::b))))
+         (image (make-test-image "
+(defpred p (a)
+  (:store :in))
+
+(deffact (p a))
+(deffact (p b))
+(deffact (p c))
+"))
          (premise (lindalog:make-premise
-                   (lindalog:make-atom (lindalog:make-pred-ref 'p)
+                   (lindalog:make-atom (lindalog:make-pred-ref 'lindalog-user::p)
                                        (list (lindalog:make-variable 'x)))
                    nil)))
     (is (member b
                 (lindalog::match-consumed-facts
                  (lindalog::match-premises
                   (list premise)
-                  database
+                  (lindalog:image-database image)
+                  (lindalog:executable-env
+                   (lindalog:image-executable image))
                   (lindalog::make-match)
                   (lambda (match)
                     (some (lambda (fact)
                             (eq (lindalog:constant-value
                                  (first (lindalog:atom-args
                                          (lindalog::fact-atom fact))))
-                                'b))
+                                'lindalog-user::b))
                           (lindalog::match-consumed-facts match)))))
                 :key #'lindalog::fact-atom
                 :test #'lindalog:ast-equal-p))))
@@ -551,21 +627,27 @@
 (test match-premises-read-and-consuming-premises-can-share-in-fact
     (let* ((a (lindalog:make-atom (lindalog:make-pred-ref 'p)
                                   (list (lindalog:make-constant 'a))))
-           (database (make-test-database
-                      '((p . :in))
-                      (list a)))
+           (image (make-test-image "
+(defpred p (a)
+  (:store :in))
+
+(deffact (p a))
+"))
            (premises (list (lindalog:make-premise
-                            (lindalog:make-atom (lindalog:make-pred-ref 'p)
+                            (lindalog:make-atom (lindalog:make-pred-ref 'lindalog-user::p)
                                                 (list (lindalog:make-variable 'x)))
                             nil)
                            (lindalog:make-premise
-                            (lindalog:make-atom (lindalog:make-pred-ref 'p)
+                            (lindalog:make-atom (lindalog:make-pred-ref 'lindalog-user::p)
                                                 (list (lindalog:make-variable 'x)))
                             t)))
            (match (lindalog::match-premises
                         premises
-                        database
-                        (lindalog::make-match))))
+                        (lindalog:image-database image)
+                        (lindalog:executable-env
+                         (lindalog:image-executable image))
+                        (lindalog::make-match)
+                        (constantly t))))
       (is (and (member a (lindalog::match-consumed-facts match)
                        :key #'lindalog::fact-atom
                        :test #'lindalog:ast-equal-p)

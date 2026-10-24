@@ -102,4 +102,13 @@
    #:read-program
 
    #:validate-program
+
+   #:make-executable
+   #:executable-env
+   #:executable-program
+
+   #:make-image
+   #:image-executable
+   #:image-database
+   #:image-already-fired
    ))

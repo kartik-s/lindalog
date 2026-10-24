@@ -112,7 +112,12 @@ or +MATCH-FAIL+ on failure."
    :read-facts (match-read-facts match)
    :consumed-facts (match-consumed-facts match)))
 
-(defun match-premises (premises database match &optional (accept-p (constantly t)))
+(defun match-rule (rule database env &optional (accept-p (constantly t)))
+  "Find a match satisfying ACCEPT-P in DATABASE for the premsies of RULE,
+or return +MATCH-FAIL+ if none exists."
+  (match-premises (rule-lhs rule) database env (make-match) accept-p))
+
+(defun match-premises (premises database env match accept-p)
   "Find a match in DATABASE for the conjunction of PREMISES that
 satisfies ACCEPT-P, or return +MATCH-FAIL+ if none exists."
   (if (null premises)
@@ -122,13 +127,12 @@ satisfies ACCEPT-P, or return +MATCH-FAIL+ if none exists."
       (let* ((premise (first premises))
              (other-premises (rest premises))
              (pred (atom-predicate (premise-atom premise)))
-             (sc (gethash (pred-ref-name pred)
-                          (database-predicate-scs database)))
-             (table (case sc
+             (sc (pred-decl-store (or (lookup-pred-decl pred env)
+                                      (return-from match-premises +match-fail+))))
+             (table (ecase sc
                       (:rd (database-rd-store database))
                       (:in (database-in-store database))
-                      (:sig (database-sig-store database))
-                      (otherwise (return-from match-premises +match-fail+)))))
+                      (:sig (database-sig-store database)))))
         (dolist (fact (gethash (pred-ref-name pred) table) (return +match-fail+))
           (unless (and (eq :in sc)
                        (not (premise-rd-p premise))
@@ -141,6 +145,7 @@ satisfies ACCEPT-P, or return +MATCH-FAIL+ if none exists."
               (unless (eq +match-fail+ first-bindings)
                 (let ((new-match (match-premises other-premises
                                                  database
+                                                 env
                                                  (extend-match-bindings
                                                   (extend-match-fact
                                                    match

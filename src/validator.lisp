@@ -131,4 +131,4 @@ there are any, and returning PROGRAM if there are none."
                                          (or (car (source-error-range e)) 0)))))
         (if errors
             (error 'program-semantic-errors :errors errors)
-            program)))))
+            (values program env))))))

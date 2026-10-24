@@ -15,9 +15,6 @@
        (ast-equal-p (fact-atom a) (fact-atom b))))
 
 (defstruct database
-  (predicate-scs (make-hash-table)
-   :type hash-table
-   :read-only t)
   (rd-store (make-hash-table)
    :type hash-table
    :read-only t)
@@ -30,29 +27,43 @@
   (next-id 0
    :type integer))
 
-(defun add-fact (atom sc database)
-  "Add ATOM to the SC table of DATABASE as a FACT."
-  (let ((pred (pred-ref-name (atom-predicate atom)))
-        (store (ecase sc
-                 (:rd (database-rd-store database))
-                 (:in (database-in-store database))
-                 (:sig (database-sig-store database))))
-        (fact (make-fact (incf (database-next-id database))
-                         atom)))
+(defun add-fact (atom database env)
+  "Add ATOM to DATABASE, selecting the correct storage class based on
+ENV."
+  (let* ((pred (atom-predicate atom))
+         (pred-decl (lookup-pred-decl pred env))
+         (sc (pred-decl-store pred-decl))
+         (store (ecase sc
+                  (:rd (database-rd-store database))
+                  (:in (database-in-store database))
+                  (:sig (database-sig-store database))))
+         (fact (make-fact (incf (database-next-id database))
+                          atom)))
     (if (eq :in sc)
-        (push fact (gethash pred store))
-        (pushnew fact (gethash pred store)
+        (push fact (gethash (pred-ref-name pred) store))
+        (pushnew fact (gethash (pred-ref-name pred) store)
                  :key #'fact-atom
                  :test #'ast-equal-p))))
 
-(defun add-predicate (pred sc database)
-  "Add PRED's SC to databaes."
-  (setf (gethash pred (database-predicate-scs database))
-        sc))
+(defstruct (executable
+            (:constructor %make-executable))
+  (env nil
+   :type environment
+   :read-only t)
+  (program nil
+   :type program
+   :read-only t))
 
-(defstruct interpreter-state
-  (rules nil
-   :type list
+(defun make-executable (program)
+  (multiple-value-bind (program env)
+      (validate-program program)
+    (%make-executable :env env
+                      :program program)))
+
+(defstruct (image
+            (:constructor %make-image))
+  (executable nil
+   :type executable
    :read-only t)
   (database (make-database)
    :type database
@@ -60,3 +71,17 @@
   (already-fired (make-hash-table)
    :type hash-table
    :read-only t))
+
+(defun boot (image)
+  (let* ((exe (image-executable image))
+         (program (executable-program exe)))
+    (dolist (fact (program-init-facts program))
+      (add-fact (init-fact-atom fact)
+                (image-database image)
+                (executable-env exe)))
+    image))
+
+(defun make-image (program)
+  (let* ((exe (make-executable program))
+         (image (%make-image :executable exe)))
+    (boot image)))
