@@ -654,3 +654,57 @@
                (member a (lindalog::match-read-facts match)
                        :key #'lindalog::fact-atom
                        :test #'lindalog:ast-equal-p)))))
+
+;;; SUBST-TERM
+
+(test subst-term-empty-bindings
+  (let ((a (lindalog:make-constant 'a)))
+    (is (lindalog:ast-equal-p
+         a
+         (lindalog::subst-term a '())))))
+
+(test subst-term-one-binding
+  (let ((a (lindalog:make-variable '?x)))
+    (is (lindalog:ast-equal-p
+         (lindalog:make-constant 3)
+         (lindalog::subst-term a (list (cons (lindalog:make-variable '?x) 3)))))))
+
+;;; SUBST-ATOM
+
+(test subst-atom-empty-bindings
+  (let ((a (lindalog:make-atom
+            (lindalog:make-pred-ref 'p)
+            (list (lindalog:make-constant 'x)
+                  (lindalog:make-constant 'y)
+                  (lindalog:make-constant 'z)))))
+    (is (lindalog:ast-equal-p
+         a
+         (lindalog::subst-atom a '())))))
+
+(test subst-atom-one-binding
+  (let ((a (lindalog:make-atom
+            (lindalog:make-pred-ref 'p)
+            (list (lindalog:make-variable '?x)
+                  (lindalog:make-constant 'y)
+                  (lindalog:make-variable '?x)))))
+    (is (lindalog:ast-equal-p
+         (lindalog:make-atom (lindalog:make-pred-ref 'p)
+                             (list (lindalog:make-constant 3)
+                                   (lindalog:make-constant 'y)
+                                   (lindalog:make-constant 3)))
+         (lindalog::subst-atom a (list (cons (lindalog:make-variable '?x) 3)))))))
+
+(test subst-atom-multiple-bindings
+  (let ((a (lindalog:make-atom
+            (lindalog:make-pred-ref 'p)
+            (list (lindalog:make-variable '?x)
+                  (lindalog:make-variable '?y)
+                  (lindalog:make-variable '?z)))))
+    (is (lindalog:ast-equal-p
+         (lindalog:make-atom (lindalog:make-pred-ref 'p)
+                             (list (lindalog:make-constant 1)
+                                   (lindalog:make-constant 2)
+                                   (lindalog:make-constant 3)))
+         (lindalog::subst-atom a (list (cons (lindalog:make-variable '?x) 1)
+                                       (cons (lindalog:make-variable '?y) 2)
+                                       (cons (lindalog:make-variable '?z) 3)))))))

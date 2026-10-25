@@ -156,3 +156,17 @@ satisfies ACCEPT-P, or return +MATCH-FAIL+ if none exists."
                                                  accept-p)))
                   (unless (eq +match-fail+ new-match)
                     (return new-match))))))))))
+
+(defun subst-term (term bindings)
+  "Substitute BINDINGS into TERM."
+  (if (variable-p term)
+      (let ((val (lookup term bindings)))
+        (if val (make-constant val) term))
+      term))
+
+(defun subst-atom (atom bindings)
+  "Substitute BINDINGS into ATOM."
+  (make-atom (atom-predicate atom)
+             (mapcar (lambda (arg)
+                       (subst-term arg bindings))
+                     (atom-args atom))))
