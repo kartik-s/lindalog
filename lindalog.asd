@@ -13,6 +13,7 @@
   ((:module "src"
     :components
     ((:file "package")
+     (:file "util")
      (:file "ast")
      (:file "conditions")
      (:file "reader")
@@ -20,7 +21,7 @@
      (:file "validator")
      (:file "state")
      (:file "match")
-     (:file "lindalog")
+     (:file "interpreter")
      )))
   :in-order-to ((asdf:test-op (asdf:test-op "lindalog/tests"))))
 
@@ -40,6 +41,7 @@
      (:file "reader")
      (:file "parser")
      (:file "validator")
+     (:file "interpreter")
      )))
   :perform (asdf:test-op (op c)
                          (declare (ignore op c))

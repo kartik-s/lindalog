@@ -1,4 +1,4 @@
-;;;; matching.lisp
+;;;; match.lisp
 
 (in-package :lindalog/tests)
 
@@ -224,9 +224,9 @@
 
 (defun make-test-image (s)
   (with-input-from-string (stream s)
-    (let ((program (lindalog:parse-program
-                     (lindalog:read-program stream))))
-      (lindalog:make-image program))))
+    (lindalog:make-image
+     (lindalog:parse-program
+      (lindalog:read-program stream)))))
 
 (test match-premises-empty-premises-succeeds
   (let* ((database (lindalog::make-database))
@@ -667,8 +667,8 @@
   (let ((a (lindalog:make-variable '?x)))
     (is (lindalog:ast-equal-p
          (lindalog:make-constant 3)
-         (lindalog::subst-term a (list (cons (lindalog:make-variable '?x) 3)))))))
-
+         (lindalog::subst-term a (list (cons (lindalog:make-variable '?x)
+                                             (lindalog:make-constant 3))))))))
 ;;; SUBST-ATOM
 
 (test subst-atom-empty-bindings
@@ -692,7 +692,8 @@
                              (list (lindalog:make-constant 3)
                                    (lindalog:make-constant 'y)
                                    (lindalog:make-constant 3)))
-         (lindalog::subst-atom a (list (cons (lindalog:make-variable '?x) 3)))))))
+         (lindalog::subst-atom a (list (cons (lindalog:make-variable '?x)
+                                             (lindalog:make-constant 3))))))))
 
 (test subst-atom-multiple-bindings
   (let ((a (lindalog:make-atom
@@ -705,6 +706,9 @@
                              (list (lindalog:make-constant 1)
                                    (lindalog:make-constant 2)
                                    (lindalog:make-constant 3)))
-         (lindalog::subst-atom a (list (cons (lindalog:make-variable '?x) 1)
-                                       (cons (lindalog:make-variable '?y) 2)
-                                       (cons (lindalog:make-variable '?z) 3)))))))
+         (lindalog::subst-atom a (list (cons (lindalog:make-variable '?x)
+                                             (lindalog:make-constant 1))
+                                       (cons (lindalog:make-variable '?y)
+                                             (lindalog:make-constant 2))
+                                       (cons (lindalog:make-variable '?z)
+                                             (lindalog:make-constant 3))))))))

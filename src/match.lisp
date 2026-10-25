@@ -128,12 +128,10 @@ satisfies ACCEPT-P, or return +MATCH-FAIL+ if none exists."
              (other-premises (rest premises))
              (pred (atom-predicate (premise-atom premise)))
              (sc (pred-decl-store (or (lookup-pred-decl pred env)
-                                      (return-from match-premises +match-fail+))))
-             (table (ecase sc
-                      (:rd (database-rd-store database))
-                      (:in (database-in-store database))
-                      (:sig (database-sig-store database)))))
-        (dolist (fact (gethash (pred-ref-name pred) table) (return +match-fail+))
+                                      (return-from match-premises +match-fail+)))))
+        (dolist (fact (gethash (pred-ref-name pred)
+                               (database-facts-by-pred database))
+                      (return +match-fail+))
           (unless (and (eq :in sc)
                        (not (premise-rd-p premise))
                        (member (fact-id fact)
@@ -161,7 +159,7 @@ satisfies ACCEPT-P, or return +MATCH-FAIL+ if none exists."
   "Substitute BINDINGS into TERM."
   (if (variable-p term)
       (let ((val (lookup term bindings)))
-        (if val (make-constant val) term))
+        (if val val term))
       term))
 
 (defun subst-atom (atom bindings)

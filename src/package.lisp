@@ -6,6 +6,8 @@
   (:shadow #:variable #:atom #:unbound-variable)
   (:export
 
+   #:multiset-equal-p
+
    #:ast-node-cst
 
    #:make-constant
@@ -59,6 +61,9 @@
    #:make-database
    #:add-fact
 
+   #:fact-id
+   #:fact-atom
+
    #:lindalog-error
 
    #:source-error
@@ -103,6 +108,12 @@
 
    #:validate-program
 
+   #:make-database
+   #:database-facts-by-pred
+   #:database-next-id
+   #:all-fact-atoms
+   #:add-fact
+
    #:make-executable
    #:executable-env
    #:executable-program
@@ -111,4 +122,11 @@
    #:image-executable
    #:image-database
    #:image-already-fired
+
+   #:make-activation
+   #:activation-refract-p
+   #:activation-key
+   #:activation-duration
+
+   #:fire-rule
    ))
