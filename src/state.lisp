@@ -43,6 +43,14 @@ ENV."
                  :key #'fact-atom
                  :test #'ast-equal-p))))
 
+(defun remove-fact (fact database)
+  "Remove FACT from DATABASE."
+  (let ((pred-name (pred-ref-name (atom-predicate (fact-atom fact))))
+        (table (database-facts-by-pred database)))
+    (setf (gethash pred-name table)
+          (delete (fact-id fact) (gethash pred-name table)
+                  :key #'fact-id))))
+
 (defstruct (executable
             (:constructor %make-executable))
   (env nil

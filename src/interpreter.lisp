@@ -49,10 +49,7 @@
                            (:permanent (image-permanent-refractions image)))))
               (setf (gethash (activation-key activation) table) t)))
           (dolist (fact (match-consumed-facts match))
-            (let* ((pred (pred-ref-name (atom-predicate (fact-atom fact))))
-                   (table (database-facts-by-pred database)))
-              (setf (gethash pred table)
-                    (delete (fact-id fact) (gethash pred table) :key #'fact-id))))
+            (remove-fact fact database))
           (dolist (conclusion (rule-rhs rule))
             (add-fact (subst-atom conclusion (match-bindings match))
                       database

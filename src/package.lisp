@@ -60,6 +60,7 @@
 
    #:make-database
    #:add-fact
+   #:remove-fact
 
    #:fact-id
    #:fact-atom
