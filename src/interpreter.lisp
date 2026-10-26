@@ -45,9 +45,10 @@
         (when activation
           (when (activation-refract-p activation)
             (let ((table (ecase (activation-duration activation)
-                           (:cycle (image-cycle-refractions image))
-                           (:permanent (image-permanent-refractions image)))))
-              (setf (gethash (activation-key activation) table) t)))
+                           (:permanent (image-permanent-refractions image))
+                           (:cycle (image-cycle-refractions image)))))
+              (setf (gethash (activation-key activation) table)
+                    t)))
           (dolist (fact (match-consumed-facts match))
             (remove-fact fact database))
           (dolist (conclusion (rule-rhs rule))
