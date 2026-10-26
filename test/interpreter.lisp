@@ -493,3 +493,35 @@
                         (first (gethash 'lindalog-user::p
                                         (lindalog:database-facts-by-pred database))))))
         (is (/= first-id second-id))))))
+
+(test fire-rule-refract-two-rules-same-premise
+  (let* ((image (make-test-image "
+(defpred p (a)
+  (:store :rd))
+
+(defpred q (a)
+  (:store :in))
+
+(deffact (p 2))
+
+(defrule foo
+  (:when (p ?x))
+  (:then (q ?x)))
+
+(defrule bar
+  (:when (p ?x))
+  (:then (q ?x)))
+"))
+         (database (lindalog:image-database image))
+         (exe (lindalog:image-executable image))
+         (program (lindalog:executable-program exe))
+         (rules (lindalog:program-rules program)))
+    (is (database-matches-p database '((p 2))))
+    (lindalog:fire-rule (first rules) image)
+    (is (database-matches-p database '((p 2) (q 2))))
+    (lindalog:fire-rule (second rules) image)
+    (is (database-matches-p database '((p 2) (q 2) (q 2))))
+    ;; Check that both rules are refracted
+    (lindalog:fire-rule (first rules) image)
+    (lindalog:fire-rule (second rules) image)
+    (is (database-matches-p database '((p 2) (q 2) (q 2))))))

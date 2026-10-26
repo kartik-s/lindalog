@@ -14,8 +14,9 @@
 (defun fire-rule (rule image)
   (let ((database (image-database image))
         (env (executable-env (image-executable image))))
-    (labels ((match-key (match)
-               (mapcar #'fact-id (match-read-facts match)))
+    (labels ((refraction-key (match)
+               (cons (rule-name rule)
+                     (mapcar #'fact-id (match-read-facts match))))
              (signal-premise-p (premise)
                (eq :sig (pred-decl-store
                          (lookup-pred-decl
@@ -23,7 +24,7 @@
                           env))))
              (refracted-p (match)
                (when (null (match-consumed-facts match))
-                 (let ((key (match-key match)))
+                 (let ((key (refraction-key match)))
                    (or (gethash key (image-permanent-refractions image))
                        (gethash key (image-cycle-refractions image)))))))
       (let* ((match (match-premises (rule-lhs rule)
@@ -36,7 +37,7 @@
                              (let ((refract-p (null (match-consumed-facts match))))
                                (make-activation
                                 refract-p
-                                (match-key match)
+                                (refraction-key match)
                                 (when refract-p
                                   (if (some #'signal-premise-p (rule-lhs rule))
                                       :cycle
