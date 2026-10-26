@@ -129,31 +129,31 @@ satisfies ACCEPT-P, or return +MATCH-FAIL+ if none exists."
              (pred (atom-predicate (premise-atom premise)))
              (sc (pred-decl-store (or (lookup-pred-decl pred env)
                                       (return-from match-premises +match-fail+)))))
-        (dolist (fact (gethash (pred-ref-name pred)
-                               (database-facts-by-pred database))
-                      (return +match-fail+))
-          (unless (and (eq :in sc)
-                       (not (premise-rd-p premise))
-                       (member (fact-id fact)
-                               (match-consumed-facts match)
-                               :key #'fact-id))
-            (let ((first-bindings (match-atom (premise-atom premise)
-                                              (fact-atom fact)
-                                              (match-bindings match))))
-              (unless (eq +match-fail+ first-bindings)
-                (let ((new-match (match-premises other-premises
-                                                 database
-                                                 env
-                                                 (extend-match-bindings
-                                                  (extend-match-fact
-                                                   match
-                                                   fact
-                                                   (and (eq :in sc)
-                                                        (not (premise-rd-p premise))))
-                                                  first-bindings)
-                                                 accept-p)))
-                  (unless (eq +match-fail+ new-match)
-                    (return new-match))))))))))
+        (loop :for fact :across (gethash (pred-ref-name pred)
+                                         (database-facts-by-pred database))
+              :do (unless (and (eq :in sc)
+                               (not (premise-rd-p premise))
+                               (member (fact-id fact)
+                                       (match-consumed-facts match)
+                                       :key #'fact-id))
+                    (let ((first-bindings (match-atom (premise-atom premise)
+                                                      (fact-atom fact)
+                                                      (match-bindings match))))
+                      (unless (eq +match-fail+ first-bindings)
+                        (let ((new-match (match-premises other-premises
+                                                         database
+                                                         env
+                                                         (extend-match-bindings
+                                                          (extend-match-fact
+                                                           match
+                                                           fact
+                                                           (and (eq :in sc)
+                                                                (not (premise-rd-p premise))))
+                                                          first-bindings)
+                                                         accept-p)))
+                          (unless (eq +match-fail+ new-match)
+                            (return new-match))))))
+              :finally (return +match-fail+)))))
 
 (defun subst-term (term bindings)
   "Substitute BINDINGS into TERM."

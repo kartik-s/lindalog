@@ -484,14 +484,16 @@
          (program (lindalog:executable-program exe))
          (rules (lindalog:program-rules program)))
     (let ((first-id
-            (lindalog:fact-id (first (gethash 'lindalog-user::p
-                                              (lindalog:database-facts-by-pred database))))))
+            (lindalog:fact-id (aref (gethash 'lindalog-user::p
+                                             (lindalog:database-facts-by-pred database))
+                                    0))))
       (is (database-matches-p database '((p 1))))
       (lindalog:fire-rule (first rules) image)
       (is (database-matches-p database '((p 1))))
       (let ((second-id (lindalog:fact-id
-                        (first (gethash 'lindalog-user::p
-                                        (lindalog:database-facts-by-pred database))))))
+                        (aref (gethash 'lindalog-user::p
+                                       (lindalog:database-facts-by-pred database))
+                              0))))
         (is (/= first-id second-id))))))
 
 (test fire-rule-refract-two-rules-same-premise

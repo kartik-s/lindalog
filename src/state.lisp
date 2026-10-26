@@ -25,23 +25,28 @@
   "Return a multiset of all the fact atoms in DATABASE."
   (loop :with table := (database-facts-by-pred database)
         :for k :being :the :hash-keys :of table
-        :append (mapcar #'fact-atom (gethash k table))))
+        :append (map 'list #'fact-atom (gethash k table))))
 
 (defun add-fact (atom database env)
   "Add ATOM to DATABASE, selecting the correct storage class based on
 ENV."
   (let* ((pred (atom-predicate atom))
+         (pred-name (pred-ref-name pred))
          (pred-decl (lookup-pred-decl pred env))
          (store (pred-decl-store pred-decl))
          (fact (make-fact (incf (database-next-id database))
-                          atom)))
+                          atom))
+         (facts-by-pred (database-facts-by-pred database)))
+    (when (null (gethash pred-name facts-by-pred))
+      (setf (gethash pred-name facts-by-pred)
+            (make-array 0 :element-type '(or null fact)
+                          :initial-element nil
+                          :adjustable t
+                          :fill-pointer 0)))
     (if (eq :in store)
-        (push fact (gethash (pred-ref-name pred)
-                            (database-facts-by-pred database)))
-        (pushnew fact (gethash (pred-ref-name pred)
-                               (database-facts-by-pred database))
-                 :key #'fact-atom
-                 :test #'ast-equal-p))))
+        (vector-push-extend fact (gethash pred-name facts-by-pred))
+        (unless (find atom (gethash pred-name facts-by-pred) :test #'ast-equal-p)
+          (vector-push-extend fact (gethash pred-name facts-by-pred))))))
 
 (defun remove-fact (fact database)
   "Remove FACT from DATABASE."
