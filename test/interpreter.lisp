@@ -156,8 +156,7 @@
          (rules (lindalog:program-rules program)))
     (is (database-matches-p database '((p 1) (p 1) (p 2))))
     (lindalog:fire-rule (first rules) image)
-    (is (or (database-matches-p database '((p 1) (p 3)))
-            (database-matches-p database '((p 2) (p 3)))))))
+    (is (database-matches-p database '((p 2) (p 3))))))
 
 (test fire-rule-no-then
   (let* ((image (make-test-image "
@@ -176,8 +175,7 @@
          (rules (lindalog:program-rules program)))
     (is (database-matches-p database '((p 1) (p 2))))
     (lindalog:fire-rule (first rules) image)
-    (is (or (database-matches-p database '((p 1)))
-            (database-matches-p database '((p 2)))))))
+    (is (database-matches-p database '((p 2))))))
 
 (test fire-rule-refract-rd-in
   (let* ((image (make-test-image "
@@ -432,8 +430,8 @@
          (rules (lindalog:program-rules program)))
     (is (database-matches-p database '((p 1) (p 2))))
     (lindalog:fire-rule (first rules) image)
-    (is (or (database-matches-p database '((p 1) (p 2) (q 1)))
-            (database-matches-p database '((p 1) (p 2) (q 2)))))
+    ;; Facts are matched in insertion order
+    (is (database-matches-p database '((p 1) (p 2) (q 1))))
     (lindalog:fire-rule (first rules) image)
     (is (database-matches-p database '((p 1) (p 2) (q 1) (q 2))))
     ;; Check that both activations are refracted
