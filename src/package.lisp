@@ -130,4 +130,5 @@
    #:activation-duration
 
    #:fire-rule
+   #:react
    ))

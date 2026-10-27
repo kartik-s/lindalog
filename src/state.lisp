@@ -37,12 +37,6 @@ ENV."
          (fact (make-fact (incf (database-next-id database))
                           atom))
          (facts-by-pred (database-facts-by-pred database)))
-    (when (null (gethash pred-name facts-by-pred))
-      (setf (gethash pred-name facts-by-pred)
-            (make-array 0 :element-type '(or null fact)
-                          :initial-element nil
-                          :adjustable t
-                          :fill-pointer 0)))
     (if (eq :in store)
         (vector-push-extend fact (gethash pred-name facts-by-pred))
         (unless (find atom (gethash pred-name facts-by-pred) :test #'ast-equal-p)
@@ -89,6 +83,13 @@ ENV."
 (defun make-image (program)
   (let* ((exe (make-executable program))
          (image (%make-image :executable exe)))
+    (dolist (pred-decl (program-pred-decls program))
+      (setf (gethash (pred-decl-name pred-decl)
+                     (database-facts-by-pred (image-database image)))
+            (make-array 0 :element-type '(or null fact)
+                          :initial-element nil
+                          :adjustable t
+                          :fill-pointer 0)))
     (dolist (fact (program-init-facts program))
       (add-fact (init-fact-atom fact)
                 (image-database image)

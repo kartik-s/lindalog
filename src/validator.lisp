@@ -8,8 +8,23 @@
    :read-only t))
 
 (defun lookup-pred-decl (pred-ref env)
+  "Get the predicate declaration that PRED-REF refers to in ENV."
   (gethash (pred-ref-name pred-ref)
            (environment-pred-decls env)))
+
+(defun premise-consuming-p (premise env)
+  "Return T if PREMISE is consumed, otherwise NIL."
+  (and (not (premise-rd-p premise))
+       (eq :in (pred-decl-store
+                (lookup-pred-decl
+                 (atom-predicate (premise-atom premise))
+                 env)))))
+
+(defun rule-consuming-p (rule env)
+  "Return T if RULE consumes any of its premises, otherwise NIL."
+  (some (lambda (premise)
+          (premise-consuming-p premise env))
+        (rule-lhs rule)))
 
 (defgeneric validate (node env)
   (:documentation "Return a list of NODE's semantic errors according to ENV, or NIL if
@@ -131,4 +146,12 @@ there are any, and returning PROGRAM if there are none."
                                          (or (car (source-error-range e)) 0)))))
         (if errors
             (error 'program-semantic-errors :errors errors)
-            (values program env))))))
+            (let ((sorted-rules
+                    (stable-sort (program-rules program)
+                                 (lambda (r1 r2)
+                                   (and (not (rule-consuming-p r1 env))
+                                        (rule-consuming-p r2 env))))))
+              (values (make-program (program-pred-decls program)
+                                    (program-init-facts program)
+                                    sorted-rules)
+                      env)))))))

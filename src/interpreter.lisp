@@ -56,3 +56,24 @@
                       database
                       env))
           (values activation))))))
+
+(defun react (image atoms)
+  (let* ((exe (image-executable image))
+         (program (executable-program exe))
+         (env (executable-env exe))
+         (rules (program-rules program)))
+    ;; Add facts
+    (dolist (atom atoms)
+      (add-fact atom (image-database image) env))
+    ;; Fire rules until quiescence
+    (loop :while (some (lambda (rule)
+                         (fire-rule rule image))
+                       rules))
+    ;; Clear signals
+    (dolist (pred-decl (program-pred-decls program))
+      (when (eq :sig (pred-decl-store pred-decl))
+        (setf (fill-pointer (gethash (pred-decl-name pred-decl)
+                                     (database-facts-by-pred (image-database image))))
+              0)))
+    ;; Clear cycle refractions
+    (clrhash (image-cycle-refractions image))))

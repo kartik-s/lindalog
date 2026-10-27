@@ -8,7 +8,7 @@
   (with-input-from-string (stream "")
     (let ((program (lindalog:parse-program
                     (lindalog:read-program stream))))
-      (is (eq program (lindalog:validate-program program))))))
+      (is (lindalog:ast-equal-p program (lindalog:validate-program program))))))
 
 (test validate-program-valid-program
   (with-input-from-string (stream "
@@ -30,7 +30,7 @@
 ")
     (let ((program (lindalog:parse-program
              (lindalog:read-program stream))))
-      (is (eq program (lindalog:validate-program program))))))
+      (is (lindalog:ast-equal-p program (lindalog:validate-program program))))))
 
 (defun validation-errors (s)
   "Read, parse, and validate the program S, returning a list of the
