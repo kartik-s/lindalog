@@ -62,8 +62,16 @@ ENV."
 (defun make-executable (program)
   (multiple-value-bind (program env)
       (validate-program program)
-    (%make-executable :env env
-                      :program program)))
+    (let ((sorted-rules
+            (stable-sort (copy-list (program-rules program))
+                         (lambda (r1 r2)
+                           (and (not (rule-consuming-p r1 env))
+                                (rule-consuming-p r2 env))))))
+      (%make-executable :env env
+                        :program (make-program
+                                  (program-pred-decls program)
+                                  (program-init-facts program)
+                                  sorted-rules)))))
 
 (defstruct (image
             (:constructor %make-image))

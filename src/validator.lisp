@@ -146,12 +146,4 @@ there are any, and returning PROGRAM if there are none."
                                          (or (car (source-error-range e)) 0)))))
         (if errors
             (error 'program-semantic-errors :errors errors)
-            (let ((sorted-rules
-                    (stable-sort (program-rules program)
-                                 (lambda (r1 r2)
-                                   (and (not (rule-consuming-p r1 env))
-                                        (rule-consuming-p r2 env))))))
-              (values (make-program (program-pred-decls program)
-                                    (program-init-facts program)
-                                    sorted-rules)
-                      env)))))))
+            (values program env))))))
