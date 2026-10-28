@@ -65,3 +65,16 @@ Output:
 ```
 
 Run the tests with `(asdf:test-system :lindalog)`.
+
+## Prior Art
+These languages have inspired and influenced the development of Lindalog:
+
+- Linda
+- Datalog
+- Esterel
+- Lustre
+- Ceptre
+- Constraint Handling Rules
+- Gamma
+- OPS5
+- Dedalus
