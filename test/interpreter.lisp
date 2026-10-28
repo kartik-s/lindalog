@@ -925,3 +925,43 @@
     (is (database-matches-p database '((x 2) (x 3))))
     (lindalog:react image '())
     (is (database-matches-p database '((x 2) (x 3))))))
+
+(test react-combust
+  (let* ((image (make-test-image "
+(defpred h2 ()
+  (:store :in))
+
+(defpred o2 ()
+  (:store :in))
+
+(defpred h2o ()
+  (:store :in))
+
+(defpred spark ()
+  (:store :sig))
+
+(deffact (h2))
+(deffact (h2))
+(deffact (h2))
+(deffact (o2))
+
+(defrule combust
+  (:when (spark) (h2) (h2) (o2))
+  (:then (h2o)))
+"))
+         (database (lindalog:image-database image)))
+    (is (database-matches-p database '((h2) (h2) (h2) (o2))))
+    (lindalog:react image '())
+    (is (database-matches-p database '((h2) (h2) (h2) (o2))))
+    (lindalog:react image (list (lindalog:make-atom
+                                 (lindalog:make-pred-ref 'lindalog-user::spark)
+                                 '())))
+    (is (database-matches-p database '((h2) (h2o))))
+    ;; No spark, no reaction
+    (lindalog:react image (list (lindalog:make-atom
+                                 (lindalog:make-pred-ref 'lindalog-user::h2)
+                                 '())
+                                (lindalog:make-atom
+                                 (lindalog:make-pred-ref 'lindalog-user::o2)
+                                 '())))
+    (is (database-matches-p database '((h2) (h2) (o2) (h2o))))))

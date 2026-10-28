@@ -1,0 +1,14 @@
+(defpred h2 () (:store :in))
+(defpred o2 () (:store :in))
+(defpred h2o () (:store :in))
+(defpred spark () (:store :sig))
+
+(deffact (h2))
+(deffact (h2))
+(deffact (h2))
+(deffact (o2))
+(deffact (o2))
+
+(defrule combustion
+  (:when (spark) (h2) (h2) (o2))
+  (:then (h2o) (h2o)))
